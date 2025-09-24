@@ -12,11 +12,7 @@ const ProductsTable = () => {
         fetch('http://localhost:8000/products')  
         .then(resp => resp.json())
         .then(products => {
-        setProducts (products)
-    
-        console.log (products)
-        
-        
+        setProducts (products)    
       });
       }, [products]);
 

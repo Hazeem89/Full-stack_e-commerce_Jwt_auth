@@ -22,6 +22,9 @@ body {
 }
 
 .AdminSide{
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   background-color: #eeeeee;
   color: black;
   border:2px solid black;
@@ -29,7 +32,7 @@ body {
   font-family: "Balsamiq Sans", sans-serif;
   font-weight: 700;
   font-style: normal;
-  font-size: large;
+  font-size: medium;
   width: 100%;
   min-height:100vh;
   max-width: 150px;
