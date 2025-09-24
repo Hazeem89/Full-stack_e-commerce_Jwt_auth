@@ -1,0 +1,71 @@
+.footNav {
+    display: flex;
+    background-color:#f0f0f0;
+    gap: 10px;
+    flex-wrap: wrap;
+    width:auto;
+    margin: 0 5px;  
+  }
+  
+  .panel1Default { 
+    border-style: none;
+    margin-bottom: 10px;
+    background-color: #f0f0f0;
+  }
+  
+  
+  .panelHeading, .accordionText{
+    font-family: "Balsamiq Sans";
+    color: inherit;
+    background-color: #f0f0f0;
+    border-radius: 5px;
+  }
+
+  .panelHeading:hover {
+    background-color: lightblue;
+    animation: mymove 5s infinite;
+  }
+
+  .accordionText:hover{
+    background-color: lightblue;
+    
+  }
+  
+  @keyframes mymove {
+    50% {border-radius: 50px;}
+  }
+  
+  
+  .CMark{
+    width:99%;
+    text-align: center;
+    margin: 30px;
+    color: black;
+    font-family: "Balsamiq Sans", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+}
+
+
+  /* Media query for mobile devices */
+  @media (max-width: 640px) {
+    .footNav {
+      flex-direction: column;
+      background-color: white;
+      padding-top: 10px;
+    }
+    
+    .panel1Default {
+      background-color: white;
+      width: 100%;
+    }
+    
+    .accordionBody {
+      background-color: white;
+    }
+    
+    .CMark {
+      background-color: white;
+      width: 90%;
+    }
+  }

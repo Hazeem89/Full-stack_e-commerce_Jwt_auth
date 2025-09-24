@@ -1,0 +1,109 @@
+.header{
+    display: flex;
+    margin: 0 5px;
+    align-items: center;
+    justify-content:space-between;
+    flex-direction: row;
+    background-color: #cce6e7;
+    background-size:cover;
+    height: auto;
+    
+}
+
+.logo {
+    margin: 0px;
+    text-align: left;
+}
+
+.logo img {
+    max-width: 50%;
+    height: auto;
+}
+
+.headerRight{
+    display: flex;
+    flex-grow: 1;
+    justify-content: space-between;
+    float: right;
+    align-items: center;
+    margin-right: 25px;
+
+
+}
+
+.searchBox {
+    position: relative;
+    flex-grow: 1;
+    text-align: left;
+    margin: 0 20px;
+    
+    
+    
+}
+
+.searchBox input {
+    border-radius: 40px;
+    padding: 5px;
+    font-size: 16px;
+    width: fit-content;
+    max-width: 50%;
+    min-width: 200px;
+    padding-left: 40px;
+    font-family: "Balsamiq Sans", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    
+}
+
+input:hover{
+    border: 2px solid #15b8f8;
+}
+
+.searchIcon {
+    position: absolute;
+    left: 15px;
+    top: 6px;
+    color: black;
+}
+
+.searchIcon:hover{
+    transform: scale(1.30);
+    color: #15b8f8;
+}
+
+.heartIcon a {
+    padding:0 5px;
+    font-size: 24px;
+    cursor: pointer;
+    color: tomato;  
+}
+
+.heartIcon:hover, .cartIcon:hover {
+    transform: scale(1.10);
+    border-bottom: 2px solid #15b8f8;
+}
+
+.cartIcon a{
+    padding:0 5px;
+    font-size: 24px;
+    cursor: pointer;
+    color: navy;
+}
+
+
+@media (width < 640px) {
+    .header {
+      display: flex;
+      flex-direction: column;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 10px;
+    }
+
+    .logo {
+        margin: 0px;
+        text-align: center;
+    }
+}

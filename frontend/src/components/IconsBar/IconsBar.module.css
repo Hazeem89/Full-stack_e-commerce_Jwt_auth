@@ -1,0 +1,56 @@
+.icons {
+    background-color:#d0d0d0;
+    position: relative;
+    display: grid;
+    flex-wrap: wrap;
+    vertical-align: middle;
+    justify-content:left;
+    align-items: center;
+    align-content: space-between;
+    margin: 0px 5px;
+    padding: 10px;
+    grid-gap:10px 30px;
+    
+     
+}
+
+.icon {
+    
+    align-items:center;
+    font-size:2rem;
+    vertical-align:middle;
+
+
+}
+
+.iconText{
+    font-size: small;
+    justify-content: center;
+    align-items: center;
+    font-family: "Balsamiq Sans", sans-serif;
+    font-size:1rem;
+    font-weight: 400;
+    font-style: normal;
+    margin-left: 10px;
+    
+}
+
+
+@media (width >= 640px) {
+      
+
+    .icons {
+        grid-template-columns: 1fr 1fr;
+        justify-content: center;
+        align-content: center;
+    }
+}  
+
+@media (width >= 1024px) {
+
+
+    .icons {
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+        align-items: center;
+    }
+}
