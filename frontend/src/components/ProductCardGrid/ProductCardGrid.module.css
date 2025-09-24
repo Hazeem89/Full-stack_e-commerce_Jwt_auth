@@ -1,0 +1,122 @@
+.products {
+    display:grid;
+    gap: 15px;
+    padding: 20px 10px;
+    margin: 0px 5px;
+    background-color: #a0a0a0;
+}
+
+.product {
+    position: relative;
+    padding: 30px 10px;
+    text-align: center;
+    background-color: #ffffff;
+    border:2px solid #f0f0f0;
+    box-shadow:5px 10px #d0d0d0;
+    border-radius: 10px;
+
+
+    
+}
+
+.product img {
+    object-fit: contain;
+    width: 100%;
+    height: auto;
+    transition: transform 0.3s ease;
+    margin-bottom: 30px;
+    border-radius: 10px;
+    
+}
+
+.product:hover {
+    transform: scale(1.02);
+    border: 3px solid #15b8f8;
+    
+}
+
+.heartIcon {
+    position: absolute;
+    bottom: 75px;
+    right: 30px;
+    font-size: 24px;
+    color: tomato;
+    cursor: pointer;
+}
+
+.price {
+    position: absolute;
+    bottom: 25px;
+    right: 15px;
+    font-size: 1rem;
+    font-family: "Balsamiq Sans", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    color: black;
+}
+
+.name {
+    position: absolute;
+    bottom: 25px;
+    left: 15px;
+    font-size: 1.1rem;
+    color: black;
+    font-family: "Balsamiq Sans", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+}
+
+h2 {
+    text-align: center;
+    bottom: 25px;
+    color: black;
+    font-family: "Balsamiq Sans", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+}
+
+h3 {
+    text-align: center;
+    bottom: 25px;
+    color: black;
+    font-family: "Balsamiq Sans", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+}
+
+.brand{
+    position: absolute;
+    bottom: 0px;
+    left: 15px;
+    font-size: 15px;
+    color: rgb(61, 60, 60);
+    font-family: "Balsamiq Sans", sans-serif;
+    font-weight: 300;
+    font-style: normal;
+}
+
+.loading{
+    display: flex ;
+    flex-direction: column;
+    min-height: "100vh";
+    justify-content:start;
+    align-items: center;
+    justify-content:space-around;
+
+}
+
+
+
+@media (min-width: 640px) {
+      
+    .products {
+        grid-template-columns: 1fr 1fr
+    }
+}
+
+@media (min-width: 1024px) {
+
+    .products {
+        grid-template-columns: 1fr 1fr 1fr 1fr
+    }
+}    

@@ -1,0 +1,30 @@
+.Spots {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    padding: 20px;
+    position: relative;
+    text-align: center;
+    color:black;
+}
+
+.Spots img:hover {
+    transform: scale(1.05);
+}
+
+.Spot {
+    position: relative;
+    text-align: center;
+    color: black;
+    font-size: 25px;
+}
+
+.spotText {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: "Balsamiq Sans", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+}
