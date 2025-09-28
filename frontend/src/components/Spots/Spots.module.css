@@ -28,3 +28,9 @@
     font-weight: 400;
     font-style: normal;
 }
+
+@media (width < 1024px) {
+    .Spots {
+        display: none;
+    }
+}

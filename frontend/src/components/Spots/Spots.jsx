@@ -34,7 +34,7 @@ const Spots = () => {
             {filteredProducts.length > 0 ? (
                 filteredProducts.map((product) => (
                     <div className={styles.Spot} key={product.id || product.Name}>
-                        <Link to={`/products/${product.id}/${product.Name}`} className={styles.productImg}>
+                        <Link to={`/products/${product.Name}`} state={{ productId: product.id }} className={styles.productImg}>
                             <img src={product.ImageUrl} alt={product.Name}/>
                             <div className={styles.spotText}>Lorem ipsum dolor</div>
                         </Link>

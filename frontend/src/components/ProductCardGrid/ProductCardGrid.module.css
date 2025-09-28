@@ -1,6 +1,6 @@
 .products {
     display:grid;
-    gap: 15px;
+    gap: 25px;
     padding: 20px 10px;
     margin: 0px 5px;
     background-color: #a0a0a0;
@@ -103,6 +103,15 @@ h3 {
     align-items: center;
     justify-content:space-around;
 
+}
+
+.noResults {
+  min-height: 60vh; /* Or use 80vh depending on your layout */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
 }
 
 

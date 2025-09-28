@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router";
 import { BsHeart } from 'react-icons/bs';
 import styles from './ProductCardGrid.module.css'; 
@@ -38,13 +38,13 @@ const ProductCardGrid = () => {
             });
     }, [isLoading]);
 
-    // if (isLoading) {
-    //     return (
-    //         <div className={styles.loading} >
-    //             <span>Laddar... </span><Spinner />
-    //         </div>
-    //     );
-    // }
+    if (isLoading) {
+        return (
+            <div className={styles.loading} >
+                <span>Laddar... </span>
+            </div>
+        );
+    }
 
     if (error) {
         return (
@@ -62,7 +62,7 @@ const ProductCardGrid = () => {
             {displayedProducts.length > 0 ? (
                 displayedProducts.map((product) => (
                     <div className={styles.product} key={product.id || product.Name}>
-                        <Link to={`/products/${product.id}/${product.Name}`}>
+                        <Link to={`/products/${product.Name}`} state={{ productId: product.id }}>
                             <img src={product.ImageUrl} alt={product.Name} />
                         </Link>
                         <span className={styles.price}>{product.Price} SEK</span>
@@ -72,7 +72,9 @@ const ProductCardGrid = () => {
                     </div>
                 ))
             ) : (
-                <div className={styles.noProducts}>Inga produkter hittades</div>
+                <div className={styles.noResults}>
+                    <h2>Hittade inga produkter! </h2>
+                </div>
             )}
         </section>
     );

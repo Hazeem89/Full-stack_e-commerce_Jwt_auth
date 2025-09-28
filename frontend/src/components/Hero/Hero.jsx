@@ -33,7 +33,7 @@ const Hero = () => {
                 <>
 
                 <div className={styles.heroCard}>
-                    <img src={topProduct.productImage} alt={topProduct.productName} />
+                    <img src={topProduct.ImageUrl} alt={topProduct.Name} />
                 </div>
                 <div className={styles.heroText}>
                         <h3>Unveil Your Style: Where Fashion Meets Confidence</h3>
