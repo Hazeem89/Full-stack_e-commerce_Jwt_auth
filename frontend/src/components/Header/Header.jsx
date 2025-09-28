@@ -13,6 +13,7 @@ const Header = () => {
     const handleSearch = (e) => {
         if (e.key === "Enter" && query.trim() !== "") {
         navigate(`/search?q=${query}`);
+        setQuery("");
         }
     };
 
@@ -47,6 +48,7 @@ const Header = () => {
                         onClick={() => {
                         if (query.trim() !== "") {
                             navigate(`/search?q=${query}`);
+                            setQuery("");
                         }
                         }}>
                         <BsSearch />

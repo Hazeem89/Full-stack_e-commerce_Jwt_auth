@@ -62,12 +62,12 @@ input:hover{
 .searchIcon {
     position: absolute;
     left: 15px;
-    top: 6px;
+    top: 50%;
+    transform: translateY(-50%);
     color: black;
 }
 
 .searchIcon:hover{
-    transform: scale(1.30);
     color: #15b8f8;
 }
 
