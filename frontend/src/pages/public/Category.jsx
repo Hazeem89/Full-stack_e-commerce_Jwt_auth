@@ -59,7 +59,7 @@ function Category() {
                 setError(error.message);
                 setIsLoading(false);
             });
-    }, [isLoading, categoryId, products.length]);
+    }, [categoryId, products.length]);
 
     if (isLoading) {
         return (
