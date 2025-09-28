@@ -17,7 +17,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
   fileFilter: (req, file, cb) => {
     const allowedTypes = /jpeg|jpg|png|webp/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
@@ -38,149 +38,87 @@ router.post('/upload-image', upload.single('image'), (req, res) => {
       return res.status(400).json({ error: 'No image file provided' });
     }
 
-    const imageUrl = `/public/images/products/${req.file.filename}`;
-    res.json({ imageUrl });
+    const ImageUrl = `${process.env.SERVER_URL || 'http://localhost:8000'}/public/images/products/${req.file.filename}`;
+
+    res.json({ ImageUrl });
   } catch (error) {
     console.error('Error uploading image:', error);
     res.status(500).json({ error: 'Failed to upload image' });
   }
 });
 
-// POST - Add new product
+// Add new product
 router.post('/products', (req, res) => {
-  const transaction = db.transaction(() => {
+    console.log('Received data:', req.body); 
+    const { Name, Price, Description, ImageUrl, Brand, SKU, Categories } = req.body;
+    console.log('Extracted imageUrl:', ImageUrl);
     try {
-      const { name, description, brand, sku, price, imageUrl, categories = [] } = req.body;
-
-      // Validate required fields
-      if (!name || !price || !imageUrl) {
-        throw new Error('Name, price, and image are required');
-      }
-
-      // Insert product
-      const result = db.prepare(`
-        INSERT INTO products (name, description, brand, sku, price, imageUrl, totalSales)
-        VALUES (?, ?, ?, ?, ?, ?, 0)
-      `).run(name, description, brand, sku, parseFloat(price), imageUrl);
-
-      const productId = result.lastInsertRowid;
-
-      // Insert product-category relationships
-      if (categories.length > 0) {
-        const insertCategory = db.prepare(`
-          INSERT INTO product_categories (product_id, category_id)
-          VALUES (?, ?)
+        // Insert the product
+        const stmt = db.prepare(`
+            INSERT INTO products (Name, Price, Description, ImageUrl, Brand, SKU, totalSales) 
+            VALUES (?, ?, ?, ?, ?, ?, '0')
         `);
+        
+        const info = stmt.run(Name, Price, Description, ImageUrl, Brand, SKU);
+        const productId = info.lastInsertRowid;
 
-        categories.forEach(categoryId => {
-          insertCategory.run(productId, parseInt(categoryId));
+        //  Insert into product_categories
+        if (Array.isArray(Categories) && Categories.length > 0) {
+            const insertCategoryStmt = db.prepare(`
+                INSERT INTO product_categories (product_id, category_id) VALUES (?, ?)
+            `);
+
+            const insertMany = db.transaction((categories) => {
+                for (const categoryId of categories) {
+                    insertCategoryStmt.run(productId, categoryId);
+                }
+            });
+
+            insertMany(Categories);
+        }
+        
+        res.status(201).json({
+            id: info.lastInsertRowid,
+            message: 'Product added successfully'
         });
-      }
-
-      res.status(201).json({ 
-        message: 'Product added successfully',
-        productId 
-      });
-    } catch (error) {
-      throw error;
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
-  });
-
-  try {
-    transaction();
-  } catch (error) {
-    console.error('Error adding product:', error);
-    res.status(400).json({ error: error.message });
-  }
 });
 
-// POST - Add new category
+// Add new category 
 router.post('/categories', (req, res) => {
   try {
-    const { name } = req.body;
-
-    if (!name) {
+    const { Name } = req.body;
+    if (!Name) {
       return res.status(400).json({ error: 'Category name is required' });
     }
 
-    const result = db.prepare('INSERT INTO categories (name) VALUES (?)').run(name);
-    
-    res.status(201).json({
-      message: 'Category added successfully',
-      categoryId: result.lastInsertRowid
-    });
-  } catch (error) {
-    if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-      return res.status(400).json({ error: 'Category name already exists' });
+    // Convert to lowercase to enforce case-insensitive uniqueness
+    const nameLower = Name.toLowerCase();
+
+    // Check if category already exists (case-insensitive)
+    const existing = db.prepare('SELECT * FROM categories WHERE LOWER(name) = ?').get(nameLower);
+    if (existing) {
+      return res.status(409).json({ error: '⛔ Category name already exists' });
     }
-    console.error('Error adding category:', error);
-    res.status(500).json({ error: 'Failed to add category' });
+
+    const stmt = db.prepare('INSERT INTO categories (name) VALUES (?)');
+    const info = stmt.run(Name);
+    const newCategory = db.prepare('SELECT * FROM categories WHERE id = ?').get(info.lastInsertRowid);
+    res.status(201).json(newCategory);
+
+  } catch (error) {
+    console.error('Error creating category:', error);
+
+    // Fallback if we somehow hit a unique constraint anyway
+    if (error.message && error.message.includes('UNIQUE constraint failed')) {
+      return res.status(409).json({ error: '⛔ Category name already exists' });
+    }
+
+    res.status(500).json({ error: 'Failed to create category' });
   }
 });
 
-// PUT - Update product
-router.put('/products/:id', (req, res) => {
-  const transaction = db.transaction(() => {
-    try {
-      const { id } = req.params;
-      const { name, description, brand, sku, price, imageUrl, categories = [] } = req.body;
-
-      // Update product
-      const result = db.prepare(`
-        UPDATE products 
-        SET name = ?, description = ?, brand = ?, sku = ?, price = ?, imageUrl = ?
-        WHERE id = ?
-      `).run(name, description, brand, sku, parseFloat(price), imageUrl, id);
-
-      if (result.changes === 0) {
-        throw new Error('Product not found');
-      }
-
-      // Delete existing category relationships
-      db.prepare('DELETE FROM product_categories WHERE product_id = ?').run(id);
-
-      // Insert new category relationships
-      if (categories.length > 0) {
-        const insertCategory = db.prepare(`
-          INSERT INTO product_categories (product_id, category_id)
-          VALUES (?, ?)
-        `);
-
-        categories.forEach(categoryId => {
-          insertCategory.run(id, parseInt(categoryId));
-        });
-      }
-
-      res.json({ message: 'Product updated successfully' });
-    } catch (error) {
-      throw error;
-    }
-  });
-
-  try {
-    transaction();
-  } catch (error) {
-    console.error('Error updating product:', error);
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// DELETE - Delete product
-router.delete('/products/:id', (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    const result = db.prepare('DELETE FROM products WHERE id = ?').run(id);
-    
-    if (result.changes === 0) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
-
-    res.json({ message: 'Product deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting product:', error);
-    res.status(500).json({ error: 'Failed to delete product' });
-  }
-});
 
 module.exports = router;

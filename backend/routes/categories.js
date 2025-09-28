@@ -14,6 +14,22 @@ router.get('/', (req, res) => {
 });
 
 
+// GET category name by ID
+router.get('/name/:categoryId', (req, res) => {
+  try {
+    const { categoryId } = req.params;
+    const category = db.prepare('SELECT name FROM categories WHERE id = ?').get(categoryId);
+    if (category) {
+      res.json(category);
+    } else {
+      res.status(404).json({ error: 'Category not found' });
+    }
+  } catch (error) {
+    console.error('Error fetching category name:', error);
+    res.status(500).json({ error: 'Failed to fetch category name' });
+  }
+});
+
 // GET products by category
 router.get('/:categoryId', (req, res) => {
   try {
@@ -27,13 +43,13 @@ router.get('/:categoryId', (req, res) => {
       ORDER BY p.name
     `).all(categoryId);
 
-    res.json({
-      products
-    });
+    res.json(products);
   } catch (error) {
     console.error('Error fetching products by category:', error);
     res.status(500).json({ error: 'Failed to fetch products' });
   }
 });
+
+
 
 module.exports = router;

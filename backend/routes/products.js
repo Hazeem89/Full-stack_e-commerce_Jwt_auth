@@ -13,7 +13,7 @@ router.get('/', (req, res) => {
 });
 
 
-// Get product by name (keeping for backward compatibility)
+/* // Get product by name (keeping for backward compatibility)
 router.get('/:name', (req, res) => {
     const { name } = req.params;
     
@@ -24,7 +24,7 @@ router.get('/:name', (req, res) => {
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
-});
+}); */
 
 // Get product by ID
 router.get('/:id', (req, res) => {
@@ -32,6 +32,18 @@ router.get('/:id', (req, res) => {
     
     try {
         const product = db.prepare('SELECT * FROM products WHERE id = ?').get(id);
+        if (!product) return res.status(404).json({ error: 'Product not found' });
+        res.json(product);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Get product by ID and name for uniqueness
+router.get('/:id/:name', (req, res) => {
+    const { id, name } = req.params;
+    try {
+        const product = db.prepare('SELECT * FROM products WHERE id = ? AND name = ?').get(id, name);
         if (!product) return res.status(404).json({ error: 'Product not found' });
         res.json(product);
     } catch (err) {
