@@ -11,7 +11,7 @@ function PublicLayout() {
     <>
       <Header />
       <TopNav />
-      <main>
+      <main style={{ minHeight: '80vh', padding: '0px 100px', backgroundColor: '#a0a0a0' }}>
         <Outlet />
       </main>
       <IconsBar/>

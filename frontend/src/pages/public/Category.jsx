@@ -83,7 +83,7 @@ function Category() {
     return (
         <>
             {displayedProducts.length > 0 ? (
-                <h3>{categoryName}</h3>
+                <h3 style={{ margin: '0', paddingTop: '10px' }}>{categoryName}</h3>
             ) : (
                 <div className={styles.noResults}>
                 <h2>Hittade inga produkter! 😓</h2>

@@ -5,6 +5,7 @@
     padding: 20px;
     position: relative;
     text-align: center;
+    background-color: #ee9f2881;
     color:black;
 }
 
@@ -27,6 +28,7 @@
     font-family: "Balsamiq Sans", sans-serif;
     font-weight: 400;
     font-style: normal;
+    color: red;
 }
 
 @media (width < 1024px) {

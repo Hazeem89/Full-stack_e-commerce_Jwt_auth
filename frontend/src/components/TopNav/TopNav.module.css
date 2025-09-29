@@ -1,9 +1,9 @@
 ul.topnav {
     list-style-type: none;
-    margin: 0 5px;
-    padding: 0;
     overflow: hidden;
     background-color: #ee9f2881;
+    margin: 0;
+    
     
 }
 
