@@ -4,11 +4,6 @@ const path = require('path');
 const router = express.Router();
 const db = require('../db');
 
-// Admin credentials (hardcoded as per request)
-const ADMIN_USERNAME = 'admin';
-const ADMIN_PASSWORD = 'password';
-
-// Middleware to require authentication
 const requireAuth = (req, res, next) => {
   if (req.session && req.session.admin) {
     return next();
@@ -20,7 +15,8 @@ const requireAuth = (req, res, next) => {
 // POST - Login
 router.post('/login', (req, res) => {
   const { username, password } = req.body;
-  if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+  const user = db.prepare('SELECT * FROM users WHERE username = ? AND password = ? AND role = ?').get(username, password, 'admin');
+  if (user) {
     req.session.admin = true;
     res.json({ message: 'Login successful' });
   } else {

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router';
 import styles from  './NewProductForm/NewProductForm.module.css';
 
 
@@ -6,6 +7,7 @@ function Login({ onLogin }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,6 +23,7 @@ function Login({ onLogin }) {
 
       if (response.ok) {
         onLogin();
+        navigate("/admin/products");
       } else {
         const data = await response.json();
         setError(data.error || 'Login failed');
