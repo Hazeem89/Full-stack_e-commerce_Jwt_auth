@@ -4,6 +4,49 @@ const path = require('path');
 const router = express.Router();
 const db = require('../db');
 
+// Admin credentials (hardcoded as per request)
+const ADMIN_USERNAME = 'admin';
+const ADMIN_PASSWORD = 'password';
+
+// Middleware to require authentication
+const requireAuth = (req, res, next) => {
+  if (req.session && req.session.admin) {
+    return next();
+  } else {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+};
+
+// POST - Login
+router.post('/login', (req, res) => {
+  const { username, password } = req.body;
+  if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+    req.session.admin = true;
+    res.json({ message: 'Login successful' });
+  } else {
+    res.status(401).json({ error: 'Invalid credentials' });
+  }
+});
+
+// GET - Check authentication
+router.get('/check-auth', (req, res) => {
+  if (req.session && req.session.admin) {
+    res.json({ authenticated: true });
+  } else {
+    res.json({ authenticated: false });
+  }
+});
+
+// POST - Logout
+router.post('/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      return res.status(500).json({ error: 'Failed to logout' });
+    }
+    res.json({ message: 'Logout successful' });
+  });
+});
+
 // Configure multer for image uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -32,7 +75,7 @@ const upload = multer({
 });
 
 // POST - Upload image
-router.post('/upload-image', upload.single('image'), (req, res) => {
+router.post('/upload-image', requireAuth, upload.single('image'), (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No image file provided' });
@@ -48,7 +91,7 @@ router.post('/upload-image', upload.single('image'), (req, res) => {
 });
 
 // Add new product
-router.post('/products', (req, res) => {
+router.post('/products', requireAuth, (req, res) => {
     console.log('Received data:', req.body); 
     const { Name, Price, Description, ImageUrl, Brand, SKU, Categories } = req.body;
     console.log('Extracted imageUrl:', ImageUrl);
@@ -87,7 +130,7 @@ router.post('/products', (req, res) => {
 });
 
 // Add new category 
-router.post('/categories', (req, res) => {
+router.post('/categories', requireAuth, (req, res) => {
   try {
     const { Name } = req.body;
     if (!Name) {
