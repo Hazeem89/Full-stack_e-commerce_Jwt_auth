@@ -1,6 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const router = express.Router();
 const db = require('../db');
 
@@ -123,6 +124,37 @@ router.post('/products', requireAuth, (req, res) => {
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
+});
+
+// Delete product
+router.delete('/products/:id', requireAuth, (req, res) => {
+  const { id } = req.params;
+  try {
+    // First, get the product to retrieve ImageUrl
+    const product = db.prepare('SELECT ImageUrl FROM products WHERE id = ?').get(id);
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+    // Delete from DB
+    const stmt = db.prepare('DELETE FROM products WHERE id = ?');
+    stmt.run(id);
+    // If ImageUrl exists, delete the file
+    if (product.ImageUrl) {
+      // Extract filename from ImageUrl
+      const urlParts = product.ImageUrl.split('/');
+      const filename = urlParts[urlParts.length - 1];
+      const filePath = path.join(__dirname, '..', 'public', 'images', 'products', filename);
+      fs.unlink(filePath, (err) => {
+        if (err) {
+          console.error('Error deleting image file:', err);
+          // Maybe log but don't fail the response
+        }
+      });
+    }
+    res.json({ message: 'Product deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Add new category 
