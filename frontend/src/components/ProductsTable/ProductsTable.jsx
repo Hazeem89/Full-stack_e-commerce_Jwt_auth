@@ -82,7 +82,7 @@ const ProductsTable = () => {
                         }
                       }}
                     >
-                    x
+                      &nbsp;&nbsp;&#x1F5D1;&nbsp;&nbsp;
                     </button>
                   </td>
                 </tr>

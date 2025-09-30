@@ -88,6 +88,7 @@ function NewProductForm() {
         const response = await fetch('http://localhost:8000/admin/upload-image', {
             method: 'POST',
             body: formData,
+            credentials: 'include',
         });
 
         if (!response.ok) {
@@ -131,6 +132,7 @@ function NewProductForm() {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(submissionData),
+              credentials: 'include',
           });
               
           if (!response.ok) {

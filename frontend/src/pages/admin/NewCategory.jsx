@@ -32,6 +32,7 @@ function NewCategory() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(formData),
+            credentials: 'include',
         })
             .then(async (response) => {
                 const data = await response.json();
