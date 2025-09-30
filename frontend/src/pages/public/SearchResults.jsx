@@ -41,7 +41,7 @@ function SearchResults() {
                 setError(error.message);
                 setIsLoading(false);
             });
-    }, [isLoading]);
+    }, [query]);
 
     if (isLoading) {
         return (
@@ -57,18 +57,26 @@ function SearchResults() {
                     Ett fel uppstod: {error}
                 </div>
             );
-        }
+    }
 
-    const filteredProducts = products.filter((product) =>
-        product.Name.toLowerCase().includes(query.toLowerCase())
-      );
+  // Split query into individual words (ignoring case)
+  const searchWords = query ? query.trim().toLowerCase().split(/\s+/) : [];
+
+  // Filter products based on all search words
+    const filteredProducts = products.filter((product) => {
+        return searchWords.every(word => 
+            product.Name.toLowerCase().includes(word) ||
+            product.Brand.toLowerCase().includes(word) ||
+            product.Description.toLowerCase().includes(word)
+        );
+    });
 
     const displayedProducts = isMobile ? filteredProducts.slice(0, 8) : filteredProducts;
 
     return (
       <>
         {filteredProducts.length > 0 ? (
-          <h3>Hittade {filteredProducts.length} produkter!😊</h3>
+          <h3 style={{ margin: '0', paddingTop: '10px' }}>Hittade {filteredProducts.length} produkter!😊</h3>
         ) : (
           <div className={styles.noResults}>
             <h2>Hittade inga produkter! 😓</h2>
