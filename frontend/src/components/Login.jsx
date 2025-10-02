@@ -46,6 +46,8 @@ function Login({ onLogin }) {
             onChange={(e) => setUsername(e.target.value)}
             required
             style={{ width: '100%', padding: '8px', marginTop: '5px' }}
+            autoComplete="username"
+
           />
         </div>
         <div style={{ marginBottom: '10px' }}>
@@ -56,6 +58,7 @@ function Login({ onLogin }) {
             onChange={(e) => setPassword(e.target.value)}
             required
             style={{ width: '100%', padding: '8px', marginTop: '5px' }}
+            autoComplete="current-password"
           />
         </div>
         <button type="submit">

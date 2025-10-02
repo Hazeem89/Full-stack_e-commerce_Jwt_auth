@@ -61,6 +61,9 @@ function NewProductForm() {
     
     const validateForm = () => {
       let newErrors = {};
+      const namLength = formData.Name ? formData.Name.length : 0;
+      if (namLength > 25)
+        newErrors.Name = "⛔ Product name cannot exceed 25 characters";
       if (!formData.Name) newErrors.Name = "⛔ Product name is required";
       if (!formData.Description)
         newErrors.Description = "⛔ Product description is required";
@@ -82,7 +85,7 @@ function NewProductForm() {
       if (formData.PublicationDate) {
         const selectedDate = new Date(formData.PublicationDate);
         const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        today.setHours(24, 0, 0, 0);
         if (selectedDate > today) {
           newErrors.PublicationDate =
             "⛔ Publication date cannot be in the future";
