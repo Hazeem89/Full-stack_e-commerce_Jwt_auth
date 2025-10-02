@@ -16,6 +16,21 @@ const CategoriesTable = () => {
       });
       }, [categories]);
 
+      const deleteCategory = (id) => {
+      fetch(`http://localhost:8000/admin/categories/${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      })
+      .then(resp => {
+        if (resp.ok) {
+          setCategories(categories.filter(category => category.id !== id));
+        } else {
+          console.error('Failed to delete category');
+        }
+      })
+      .catch(error => console.error('Error deleting category:', error));
+    }
+
 
     return (
        <>
@@ -30,13 +45,34 @@ const CategoriesTable = () => {
           <table>
               <thead>
               <tr>
-                  <th>Namn</th>
+                  <th style={{ textAlign: "center" }}>Namn</th>
               </tr>
               </thead> 
               <tbody>
               {categories.map((c) => (
                   <tr key={c.id}>
-                  <td>{c.name}</td>
+                  <td  style={{ textAlign: "center" }}>
+                    <div className={styles.tdContent}>
+                    <span>{c.name}</span>
+                  
+                    {/* Radera with confirmation as a button */}
+                    <button
+                      className={styles.deleteButton}
+                      type="button"
+                      title="Radera kategori"
+                      onClick={() => {
+                        const confirmed = window.confirm(
+                          `Är du säker på att du vill radera ${c.name}?`
+                        );
+                        if (confirmed) {
+                          deleteCategory(c.id);
+                        }
+                      }}
+                    >
+                      &nbsp;&nbsp;&#x1F5D1;&nbsp;&nbsp;
+                    </button>
+                    </div>
+                  </td>
                   </tr>
                   ))}
               </tbody>

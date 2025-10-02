@@ -191,5 +191,23 @@ router.post('/categories', requireAuth, (req, res) => {
   }
 });
 
+// Delete category
+router.delete('/categories/:id', requireAuth, (req, res) => {
+  const { id } = req.params;
+  try {
+    // Check if category exists
+    const category = db.prepare('SELECT * FROM categories WHERE id = ?').get(id);
+    if (!category) {
+      return res.status(404).json({ error: 'Category not found' });
+    }
+    // Delete from DB
+    const stmt = db.prepare('DELETE FROM categories WHERE id = ?');
+    stmt.run(id);
+    res.json({ message: 'Category deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
 module.exports = router;
