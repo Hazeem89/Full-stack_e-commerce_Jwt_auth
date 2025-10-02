@@ -6,6 +6,7 @@ require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 8000;
+const sessionSecret = process.env.SESSION_SECRET
 
 // Middleware
 app.use(express.json());
@@ -17,7 +18,7 @@ app.use(cors({
 
 // Session middleware
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'your-secret-key', // Use env var in production
+  secret: sessionSecret || 'HakonaMatata', // Use env var in production
   resave: false,
   saveUninitialized: false,
   cookie: { secure: false } // Set to true if using HTTPS
