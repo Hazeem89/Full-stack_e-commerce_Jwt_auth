@@ -6,11 +6,12 @@ function NewProductForm() {
     
     const [formData, setFormData] = useState({
         Name: "",
-        Price: "",
         Description: "",
         ImageUrl: "",
         Brand: "",
         SKU: "",
+        Price: "",
+        PublicationDate: "",
     });
 
     const [imageFile, setImageFile] = useState(null);
@@ -59,16 +60,38 @@ function NewProductForm() {
     };
     
     const validateForm = () => {
-        let newErrors = {};
-        if (!formData.Name) newErrors.Name = "⛔ Product name is required";
-        if (!formData.Price) newErrors.Price = "⛔ Product price is required";
-        if (!formData.Description) newErrors.Description = "⛔ Product description is required";
-        if (!imageFile && !formData.ImageUrl) newErrors.ImageUrl = "⛔ Product URL is required";
-        if (!formData.Brand) newErrors.Brand = "⛔ Product brand is required";
-        if (!formData.SKU) newErrors.SKU = "⛔ Product SKU is required";
-        if (selectedCategories.length === 0) newErrors.Categories = "⛔ At least one category must be selected";
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
+      let newErrors = {};
+      if (!formData.Name) newErrors.Name = "⛔ Product name is required";
+      if (!formData.Description)
+        newErrors.Description = "⛔ Product description is required";
+      if (!imageFile && !formData.ImageUrl)
+        newErrors.ImageUrl = "⛔ Product URL is required";
+      if (!formData.Brand) newErrors.Brand = "⛔ Product brand is required";
+      // SKU presence check
+      if (!formData.SKU) {
+        newErrors.SKU = "⛔ Product SKU is required";
+      } else {
+        // SKU format check: 3 uppercase letters followed by 3 digits
+        const skuPattern = /^[A-Z]{3}[0-9]{3}$/;
+        if (!skuPattern.test(formData.SKU)) {
+          newErrors.SKU =
+            "⛔ SKU must be in the format XXX123 (3 uppercase letters followed by 3 digits)";
+        }
+      }
+      if (!formData.Price) newErrors.Price = "⛔ Product price is required";
+      if (formData.PublicationDate) {
+        const selectedDate = new Date(formData.PublicationDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (selectedDate > today) {
+          newErrors.PublicationDate =
+            "⛔ Publication date cannot be in the future";
+        }
+      }
+      if (selectedCategories.length === 0)
+        newErrors.Categories = "⛔ At least one category must be selected";
+      setErrors(newErrors);
+      return Object.keys(newErrors).length === 0;
     };
 
     const handleCategoryChange = (event) => {
@@ -118,11 +141,12 @@ function NewProductForm() {
         
           const submissionData = {
               Name: formData.Name,
-              Price: formData.Price,
               Description: formData.Description,
               Brand: formData.Brand,
               ImageUrl: ImageUrl,
               SKU: formData.SKU,
+              Price: formData.Price,
+              PublicationDate: formData.PublicationDate || null,
               Categories: selectedCategories.map(id => parseInt(id))
           };
 
@@ -148,11 +172,12 @@ function NewProductForm() {
             // Reset form
             setFormData({
                 Name: "",
-                Price: "",
                 Description: "",
                 ImageUrl: "",
                 Brand: "",
                 SKU: "",
+                Price: "",
+                PublicationDate: "",
             });
 
             setImageFile(null);
@@ -286,6 +311,20 @@ function NewProductForm() {
               />
               {errors.Price && (
                 <p className={styles.errorMessage}>{errors.Price}</p>
+              )}
+            </div>
+
+            <div className={styles.formUnit}>
+              <label>Publiseringsdatum</label>
+              <br />
+              <input
+                type="date"
+                name="PublicationDate"
+                value={formData.PublicationDate}
+                onChange={handleChange}
+              />
+              {errors.PublicationDate && (
+                <p className={styles.errorMessage}>{errors.PublicationDate}</p>
               )}
             </div>
             <br />

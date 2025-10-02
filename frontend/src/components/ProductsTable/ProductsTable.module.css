@@ -90,7 +90,6 @@ table {
   th{
     font-family: "Balsamiq Sans", sans-serif;
     border-collapse: collapse;
-    text-align: left;
     background-color: #cccccc;
     width: fit-content;
     border:2px solid black;
@@ -101,7 +100,6 @@ table {
 
   td {
     border-right: 2px solid black;
-    text-align: left;
     padding:10px 20px;
     padding-left: 5px;
     width: fit-content;

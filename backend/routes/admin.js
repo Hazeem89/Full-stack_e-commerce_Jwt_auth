@@ -90,16 +90,16 @@ router.post('/upload-image', requireAuth, upload.single('image'), (req, res) => 
 // Add new product
 router.post('/products', requireAuth, (req, res) => {
     console.log('Received data:', req.body); 
-    const { Name, Price, Description, ImageUrl, Brand, SKU, Categories } = req.body;
+    const { Name, Description, ImageUrl, Brand, SKU, Price, PublicationDate, Categories } = req.body;
     console.log('Extracted imageUrl:', ImageUrl);
     try {
         // Insert the product
         const stmt = db.prepare(`
-            INSERT INTO products (Name, Price, Description, ImageUrl, Brand, SKU, totalSales) 
-            VALUES (?, ?, ?, ?, ?, ?, '0')
+            INSERT INTO products (Name, Description, ImageUrl, Brand, SKU, Price, PublicationDate, totalSales) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, '0')
         `);
         
-        const info = stmt.run(Name, Price, Description, ImageUrl, Brand, SKU);
+        const info = stmt.run(Name, Description, ImageUrl, Brand, SKU, Price, PublicationDate);
         const productId = info.lastInsertRowid;
 
         //  Insert into product_categories

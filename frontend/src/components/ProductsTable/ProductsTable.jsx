@@ -45,17 +45,18 @@ const ProductsTable = () => {
           <table>
             <thead>
               <tr>
-                <th>Namn</th>
-                <th>SKU</th>
-                <th>Pris</th>
-                <th>Antal sålda</th>
-                <th style={{ textAlign: "center" }}>Radera</th>
+                <th  style={{ textAlign: "center" }}>Namn</th>
+                <th  style={{ textAlign: "center" }}>SKU</th>
+                <th  style={{ textAlign: "center" }}>Pris</th>
+                <th  style={{ textAlign: "center" }}>Publiceringsdatum</th>
+                <th  style={{ textAlign: "center" }}>Antal sålda</th>
+                <th  style={{ textAlign: "center" }}>Radera</th>
               </tr>
             </thead>
             <tbody>
               {products.map((product) => (
                 <tr key={product.id}>
-                  <td>
+                  <td style={{ textAlign: "center" }}> 
                     <Link
                       to={`/products/${product.Name}`}
                       state={{ productId: product.id }}
@@ -63,13 +64,13 @@ const ProductsTable = () => {
                       {product.Name}
                     </Link>
                   </td>
-                  <td>{product.SKU}</td>
-                  <td>{product.Price}</td>
-                  <td>{product.totalSales}</td>
-                  <td style={{ textAlign: "center" }}>
+                  <td  style={{ textAlign: "center" }}>{product.SKU}</td>
+                  <td  style={{ textAlign: "center" }}>{product.Price}</td>
+                  <td  style={{ textAlign: "center" }}>{product.PublicationDate}</td>
+                  <td  style={{ textAlign: "center" }}>{product.totalSales}</td>
+                  <td  style={{ textAlign: "center" }}>
                     {/* Radera with confirmation as a button */}
                     <button
-                      style={{ textAlign: "center" }}
                       className={styles.deleteButton}
                       type="button"
                       title="Radera produkt"
