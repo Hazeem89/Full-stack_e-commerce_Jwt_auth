@@ -12,6 +12,18 @@ router.get('/', (req, res) => {
     }
 });
 
+// GET products published in the last 7 days
+router.get('/recent', (req, res) => {
+    try {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        const products = db.prepare('SELECT * FROM products WHERE PublicationDate >= ?').all(sevenDaysAgo.toISOString());
+        res.json(products);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 
 /* // Get product by name (keeping for backward compatibility)
 router.get('/:name', (req, res) => {

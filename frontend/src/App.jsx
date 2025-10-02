@@ -9,6 +9,7 @@ import Home from './pages/public/Home.jsx';
 import Product from './pages/public/Product';
 import SearchResults from './pages/public/SearchResults';
 import Category from './pages/public/Category.jsx';
+import Nyheter from './pages/public/Nyheter.jsx';
 
 import AdminProducts from './pages/admin/AdminProducts';
 import NewProduct from './pages/admin/NewProduct';
@@ -24,7 +25,7 @@ function App() {
         <Route path="/products/:name" element={<Product />} />
         <Route path="/search" element={<SearchResults />} />
         <Route path="/categories/:name" element={<Category />} />
-
+        <Route path="/recent" element={<Nyheter />} />
       </Route>
       {/* Admin layout routes */}
       <Route path="/admin/" element={<AdminLayout />}>

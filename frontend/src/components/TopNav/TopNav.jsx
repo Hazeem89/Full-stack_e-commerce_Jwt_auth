@@ -19,6 +19,7 @@ const TopNav = () => {
         <section>
           <div>
             <ul className={styles.topnav}>
+              <li><Link to="/recent">Nyheter</Link></li>
               {categories.map((category) => (
                 <li key={category.id}>
                     <Link to={`/categories/${category.name}`}state={{ categoryId: category.id }}>
