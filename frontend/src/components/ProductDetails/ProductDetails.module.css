@@ -62,13 +62,20 @@
 .button{
     margin: 0px;
     font-family: "Balsamiq Sans", sans-serif;
-
+    transition: all 0.3s ease;
 }
 
 .button:hover{
-  
-  border: 2px solid #15b8f8;
-  
+    border: 2px solid #15b8f8;
+}
+
+.buttonAnimating {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.buttonAnimating:hover {
+    border: 2px solid #ccc;
 }
 
 @media (width < 640px){
@@ -98,5 +105,3 @@
 
 
 }
-
-   

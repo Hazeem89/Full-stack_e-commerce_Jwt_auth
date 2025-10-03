@@ -12,6 +12,7 @@ const ProductDetails = () => {
     const { favorites, toggleFavorite } = useFav();
     const { addToCart } = useCart();
     const [product, setProduct] = useState(null);
+    const [isAnimating, setIsAnimating] = useState(false);
 
     useEffect(() => {
         if (!productId) {
@@ -31,6 +32,53 @@ const ProductDetails = () => {
             });
     }, [productId]);
 
+    const handleAddToCart = (e) => {
+        if (!product) return;
+        
+        const button = e.currentTarget;
+        const productImage = document.querySelector(`.${styles.productCard} img`);
+        const cartIcon = document.querySelector('.cartIconTarget');
+        
+        if (!productImage || !cartIcon) {
+            addToCart(product, 1);
+            return;
+        }
+
+        // Get positions
+        const imageRect = productImage.getBoundingClientRect();
+        const cartRect = cartIcon.getBoundingClientRect();
+
+        // Create flying image
+        const flyingImg = productImage.cloneNode(true);
+        flyingImg.style.position = 'fixed';
+        flyingImg.style.left = `${imageRect.left}px`;
+        flyingImg.style.top = `${imageRect.top}px`;
+        flyingImg.style.width = `${imageRect.width}px`;
+        flyingImg.style.height = `${imageRect.height}px`;
+        flyingImg.style.zIndex = '9999';
+        flyingImg.style.transition = 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
+        flyingImg.style.pointerEvents = 'none';
+        flyingImg.style.borderRadius = '10px';
+        
+        document.body.appendChild(flyingImg);
+
+        // Trigger animation
+        setIsAnimating(true);
+        requestAnimationFrame(() => {
+            flyingImg.style.left = `${cartRect.left}px`;
+            flyingImg.style.top = `${cartRect.top}px`;
+            flyingImg.style.width = '0px';
+            flyingImg.style.height = '0px';
+            flyingImg.style.opacity = '0';
+        });
+
+        // Cleanup and add to cart
+        setTimeout(() => {
+            flyingImg.remove();
+            addToCart(product, 1);
+            setIsAnimating(false);
+        }, 800);
+    };
 
     return (
         <>
@@ -63,14 +111,11 @@ const ProductDetails = () => {
                             <span className={styles.price}>{product.Price} SEK</span>
                             <br/><br/>
                             <button
-                                className={styles.button}
-                                onClick={() => {
-                                    if (product) {
-                                        addToCart(product, 1);
-                                    }
-                                }}
+                                className={`${styles.button} ${isAnimating ? styles.buttonAnimating : ''}`}
+                                onClick={handleAddToCart}
+                                disabled={isAnimating}
                             >
-                                Lägg i varukorg
+                                {isAnimating ? 'Lägger till...' : 'Lägg i varukorg'}
                             </button>
                         </div>
                     </div>

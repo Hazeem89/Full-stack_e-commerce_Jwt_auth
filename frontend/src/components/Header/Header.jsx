@@ -60,7 +60,7 @@ const Header = () => {
                     </Link>
                 </span>    
                 <span className = {styles.cartIcon}>
-                    <Link to = {'/basket'} >
+                    <Link to = {'/basket'} className="cartIconTarget">
                         <BsBasket2Fill size={25}/>
                     </Link>
                 </span>
