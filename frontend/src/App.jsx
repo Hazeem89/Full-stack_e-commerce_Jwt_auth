@@ -3,6 +3,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { Routes, Route } from 'react-router';
 import { AuthProvider } from './contexts/AuthContext';
 import { FavProvider } from './contexts/FavContext';
+import { CartProvider } from './contexts/CartContext';
 
 import PublicLayout from './layouts/PublicLayout';
 import AdminLayout from './layouts/AdminLayout';
@@ -13,7 +14,7 @@ import SearchResults from './pages/public/SearchResults';
 import Category from './pages/public/Category.jsx';
 import Nyheter from './pages/public/Nyheter.jsx';
 import Favorites from './pages/public/Favorites.jsx';
-// import Cart from './pages/public/Cart.jsx';
+import Cart from './pages/public/Cart.jsx';
 import Login from './pages/public/Login.jsx';
 import Register from './pages/public/Register.jsx';
 
@@ -26,7 +27,8 @@ function App() {
   return (
     <AuthProvider>
       <FavProvider>
-        <Routes>
+        <CartProvider>
+          <Routes>
           {/* Public layout routes */}
           <Route element={<PublicLayout />}>
             <Route index element={<Home />} />
@@ -35,7 +37,7 @@ function App() {
             <Route path="/categories/:name" element={<Category />} />
             <Route path="/recent" element={<Nyheter />} />
             <Route path="/favorites" element={<Favorites />} />
-            {/* <Route path="/cart" element={<Cart />} /> */}
+            <Route path="/basket" element={<Cart />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
           </Route>
@@ -47,6 +49,7 @@ function App() {
             <Route path="/admin/categories/new" element={<NewCategory />} />
           </Route>
         </Routes>
+        </CartProvider>
       </FavProvider>
     </AuthProvider>
   );

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router';
 import { BsHeart, BsHeartFill } from 'react-icons/bs';
 import { useFav } from '../../contexts/FavContext';
+import { useCart } from '../../contexts/CartContext';
 import styles from './ProductDetails.module.css';
 import SimilarProduct from '../SimilarProduct/SimilarProduct';
 
@@ -9,6 +10,7 @@ const ProductDetails = () => {
     const location = useLocation();
     const productId = location.state?.productId;
     const { favorites, toggleFavorite } = useFav();
+    const { addToCart } = useCart();
     const [product, setProduct] = useState(null);
 
     useEffect(() => {
@@ -60,7 +62,16 @@ const ProductDetails = () => {
                             <span><br/>{product.Description}</span><br/><br/><br/>
                             <span className={styles.price}>{product.Price} SEK</span>
                             <br/><br/>
-                            <button className={styles.button}>Lägg i varukorg</button>
+                            <button
+                                className={styles.button}
+                                onClick={() => {
+                                    if (product) {
+                                        addToCart(product, 1);
+                                    }
+                                }}
+                            >
+                                Lägg i varukorg
+                            </button>
                         </div>
                     </div>
 

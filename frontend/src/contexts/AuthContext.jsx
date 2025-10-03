@@ -24,6 +24,7 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     localStorage.removeItem('user');
     localStorage.removeItem('favorites'); // Clear anonymous favorites on logout
+    localStorage.removeItem('cart'); // Clear anonymous cart on logout
   };
 
   const value = {

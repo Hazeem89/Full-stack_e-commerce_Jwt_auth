@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Outlet } from 'react-router';
 import { Link } from "react-router";
 import Login from '../components/Login';
-import '../App.css';
+
 
 function AdminLayout() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);

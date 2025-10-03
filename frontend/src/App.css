@@ -43,3 +43,143 @@ body {
  border-bottom: 2px solid #20befd98;  
 
 }
+
+.cartPage {
+  padding: 20px;
+}
+
+.loadingContainer {
+  padding: 20px;
+  text-align: center;
+}
+
+.cartTitle {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.emptyCart {
+  text-align: center;
+  min-height: 50vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.shopLink {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.cartContainer {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.cartItem {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #ddd;
+  padding: 10px 0;
+}
+
+.productImage {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  margin-right: 15px;
+}
+
+.productInfo {
+  flex: 1;
+}
+
+.productName {
+  margin: 0 0 5px 0;
+}
+
+.productBrand {
+  margin: 0;
+  color: #666;
+}
+
+.productPrice {
+  margin: 5px 0;
+  font-weight: bold;
+}
+
+.quantityControls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.quantityButton {
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.quantityDisplay {
+  display: inline-block;
+  min-width: 20px;
+  text-align: center;
+}
+
+.removeButton {
+  background-color: #ca5957; /* red */
+  color: white;
+  border: 2px solid rgb(205, 230, 227);
+  border-radius: 5px;
+  margin-right: 0px;
+  padding: 5px;
+  max-width: 20%;
+  min-width:fit-content;
+  min-height:fit-content;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  font-size: medium;
+}
+
+.removeButton:hover {
+  background-color: #c62828; /* darker red */
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.removeButton:active {
+  transform: scale(0.95);
+}
+
+.totalContainer {
+  max-width: 800px;
+  margin: 20px auto;
+  text-align: center;
+}
+
+.totalAmount {
+  margin: 0 0 10px 0;
+}
+
+.checkoutButton {
+  padding: 10px 20px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.errorMessage {
+  color: red;
+  text-align: center;
+  margin: 10px 0;
+}
+
+@media ( width < 640px) {
+  .totalContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+}
