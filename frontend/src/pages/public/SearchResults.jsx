@@ -1,13 +1,15 @@
 import {useState, useEffect} from "react";
 import { useLocation, Link } from "react-router";
+import { BsHeart, BsHeartFill } from 'react-icons/bs';
+import { useFav } from '../../contexts/FavContext';
 import styles from '../../components/ProductCardGrid/ProductCardGrid.module.css';
-import { BsHeart } from "react-icons/bs";
 
 
 function SearchResults() {
 
     const location = useLocation();
     const query = new URLSearchParams(location.search).get('q');
+    const { favorites, toggleFavorite, isLoading: favLoading } = useFav();
 
     const [products, setProducts] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -43,7 +45,7 @@ function SearchResults() {
             });
     }, [query]);
 
-    if (isLoading) {
+    if (favLoading || isLoading) {
         return (
             <div className={styles.loading} >
                 <span>Laddar... </span>
@@ -85,24 +87,37 @@ function SearchResults() {
 
         <section className={styles.products}>
           {displayedProducts.length > 0 &&
-            displayedProducts.map((product) => (
-              <div className={styles.product} key={product.id || product.Name}>
-                <Link
-                  to={`/products/${product.Name}`}
-                  state={{ productId: product.id }}
-                >
-                  <img src={product.ImageUrl} alt={product.Name} />
-                </Link>
-                <span className={styles.price}>{product.Price} SEK</span>
-                <span className={styles.name}>{product.Name}</span>
-                <span className={styles.brand}>{product.Brand}</span>
-                <span className={styles.heartIcon}>
-                  <span>
-                    <BsHeart />
-                  </span>
-                </span>
-              </div>
-            ))}
+            displayedProducts.map((product) => {
+                const isFavorite = favorites.includes(product.id);
+                return (
+                    <div className={styles.product} key={product.id || product.Name}>
+                        <Link
+                          to={`/products/${product.Name}`}
+                          state={{ productId: product.id }}
+                        >
+                          <img src={product.ImageUrl} alt={product.Name} />
+                        </Link>
+                        <span className={styles.price}>{product.Price} SEK</span>
+                        <span className={styles.name}>{product.Name}</span>
+                        <span className={styles.brand}>{product.Brand}</span>
+                        <span
+                            className={styles.heartIcon}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                toggleFavorite(product.id);
+                            }}
+                            style={{ cursor: 'pointer' }}
+                        >
+                            {isFavorite ? (
+                                <BsHeartFill style={{ color: 'tomato' }} />
+                            ) : (
+                                <BsHeart />
+                            )}
+                        </span>
+                    </div>
+                );
+            })}
         </section>
       </>
     );

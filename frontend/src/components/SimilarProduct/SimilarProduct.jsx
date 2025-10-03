@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
-import { BsHeart } from "react-icons/bs";
+import { BsHeart, BsHeartFill } from "react-icons/bs";
+import { useFav } from '../../contexts/FavContext';
 import styles from './SimilarProduct.module.css';
 
 const SimilarProduct = ({ Name, id }) => {
+    const { favorites, toggleFavorite } = useFav();
     const [products, setProducts] = useState([]);
       
     useEffect(() => {
@@ -36,7 +38,6 @@ const SimilarProduct = ({ Name, id }) => {
         .slice(0, 3)
     : [];
 
-
     return (
         <>  
            {filteredProducts.length > 0 && 
@@ -44,17 +45,34 @@ const SimilarProduct = ({ Name, id }) => {
             }
             <section className={styles.products}> 
                 {filteredProducts.length > 0 && (
-                    filteredProducts.map((product) => (
-                        <div className={styles.product} key={product.id || product.Name}>
-                            <Link to={`/products/${product.Name}`} state={{ productId: product.id }} className={styles.productImg}>
-                                <img src={product.ImageUrl} alt={product.Name}/>
-                                <span className={styles.heartIcon}><BsHeart/></span>
-                            </Link>
-                            <span className={styles.price}>{product.Price} SEK</span>
-                            <span className={styles.name}>{product.Name}</span>
-                            <span className={styles.brand}>{product.Brand}</span>
-                        </div>
-                    ))
+                    filteredProducts.map((product) => {
+                        const isFavorite = favorites.includes(product.id);
+                        return (
+                            <div className={styles.product} key={product.id || product.Name}>
+                                <Link to={`/products/${product.Name}`} state={{ productId: product.id }} className={styles.productImg}>
+                                    <img src={product.ImageUrl} alt={product.Name}/>
+                                    <span
+                                        className={styles.heartIcon}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            toggleFavorite(product.id);
+                                        }}
+                                        style={{ cursor: 'pointer' }}
+                                    >
+                                        {isFavorite ? (
+                                            <BsHeartFill style={{ color: 'tomato' }} />
+                                        ) : (
+                                            <BsHeart />
+                                        )}
+                                    </span>
+                                </Link>
+                                <span className={styles.price}>{product.Price} SEK</span>
+                                <span className={styles.name}>{product.Name}</span>
+                                <span className={styles.brand}>{product.Brand}</span>
+                            </div>
+                        );
+                    })
                 )}
             </section>
         </>

@@ -1,45 +1,26 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { BsHeartFill } from 'react-icons/bs';
-import { useAuth } from '../../contexts/AuthContext';
+import { useFav } from '../../contexts/FavContext';
 import styles from '../../components/ProductCardGrid/ProductCardGrid.module.css';
 
 const Favorites = () => {
-    const { user, isAuthenticated } = useAuth();
+    const { toggleFavorite, getFavoritesProducts, isLoading: favLoading } = useFav();
     const [favorites, setFavorites] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
 
     useEffect(() => {
         loadFavorites();
-    }, [user, isAuthenticated]);
+    }, []);
 
     const loadFavorites = async () => {
         setIsLoading(true);
         setError(null);
 
         try {
-            if (isAuthenticated && user?.id) {
-                // Fetch from backend for logged-in users
-                const response = await fetch(`http://localhost:8000/users/favorites/${user.id}`);
-                if (!response.ok) throw new Error('Failed to load favorites');
-                const data = await response.json();
-                setFavorites(data);
-            } else {
-                // Get from localStorage for anonymous users
-                const localFavorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-                
-                if (localFavorites.length > 0) {
-                    // Fetch product details for each favorite
-                    const productPromises = localFavorites.map(id =>
-                        fetch(`http://localhost:8000/products/${id}`).then(res => res.json())
-                    );
-                    const products = await Promise.all(productPromises);
-                    setFavorites(products.filter(p => p && !p.error));
-                } else {
-                    setFavorites([]);
-                }
-            }
+            const data = await getFavoritesProducts();
+            setFavorites(data);
         } catch (err) {
             console.error('Error loading favorites:', err);
             setError(err.message);
@@ -49,29 +30,11 @@ const Favorites = () => {
     };
 
     const removeFavorite = async (productId) => {
-        try {
-            if (isAuthenticated && user?.id) {
-                // Remove from backend
-                const response = await fetch(`http://localhost:8000/users/favorites/${user.id}/${productId}`, {
-                    method: 'DELETE'
-                });
-                if (!response.ok) throw new Error('Failed to remove favorite');
-            } else {
-                // Remove from localStorage
-                const localFavorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-                const updated = localFavorites.filter(id => id !== productId);
-                localStorage.setItem('favorites', JSON.stringify(updated));
-            }
-            
-            // Update UI
-            setFavorites(prev => prev.filter(p => p.id !== productId));
-        } catch (err) {
-            console.error('Error removing favorite:', err);
-            alert('Kunde inte ta bort favorit');
-        }
+        await toggleFavorite(productId);
+        setFavorites(prev => prev.filter(p => p.id !== productId));
     };
 
-    if (isLoading) {
+    if (favLoading || isLoading) {
         return (
             <div className={styles.loading}>
                 <span>Laddar favoriter...</span>
@@ -90,7 +53,7 @@ const Favorites = () => {
     return (
         <div style={{ padding: '20px' }}>
             <h2 style={{ textAlign: 'center', margin: '20px 0' }}>Mina Favoriter</h2>
-            
+
             {favorites.length === 0 ? (
                 <div className={styles.noResults}>
                     <div>
@@ -111,8 +74,8 @@ const Favorites = () => {
                             <span className={styles.price}>{product.Price} SEK</span>
                             <span className={styles.name}>{product.Name}</span>
                             <span className={styles.brand}>{product.Brand}</span>
-                            <span 
-                                className={styles.heartIcon} 
+                            <span
+                                className={styles.heartIcon}
                                 onClick={() => removeFavorite(product.id)}
                                 style={{ cursor: 'pointer' }}
                             >

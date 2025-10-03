@@ -2,6 +2,7 @@ import './App.css'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Routes, Route } from 'react-router';
 import { AuthProvider } from './contexts/AuthContext';
+import { FavProvider } from './contexts/FavContext';
 
 import PublicLayout from './layouts/PublicLayout';
 import AdminLayout from './layouts/AdminLayout';
@@ -24,27 +25,29 @@ import NewCategory from './pages/admin/NewCategory.jsx';
 function App() {
   return (
     <AuthProvider>
-      <Routes>
-        {/* Public layout routes */}
-        <Route element={<PublicLayout />}>
-          <Route index element={<Home />} />
-          <Route path="/products/:name" element={<Product />} />
-          <Route path="/search" element={<SearchResults />} />
-          <Route path="/categories/:name" element={<Category />} />
-          <Route path="/recent" element={<Nyheter />} />
-          <Route path="/favorites" element={<Favorites />} />
-          {/* <Route path="/cart" element={<Cart />} /> */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-        </Route>
-        {/* Admin layout routes */}
-        <Route path="/admin/" element={<AdminLayout />}>
-          <Route path="/admin/products/" element={<AdminProducts />} />
-          <Route path="/admin/products/new" element={<NewProduct />} />
-          <Route path="/admin/categories/" element={<AdminCategories />} />
-          <Route path="/admin/categories/new" element={<NewCategory />} />
-        </Route>
-      </Routes>
+      <FavProvider>
+        <Routes>
+          {/* Public layout routes */}
+          <Route element={<PublicLayout />}>
+            <Route index element={<Home />} />
+            <Route path="/products/:name" element={<Product />} />
+            <Route path="/search" element={<SearchResults />} />
+            <Route path="/categories/:name" element={<Category />} />
+            <Route path="/recent" element={<Nyheter />} />
+            <Route path="/favorites" element={<Favorites />} />
+            {/* <Route path="/cart" element={<Cart />} /> */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+          </Route>
+          {/* Admin layout routes */}
+          <Route path="/admin/" element={<AdminLayout />}>
+            <Route path="/admin/products/" element={<AdminProducts />} />
+            <Route path="/admin/products/new" element={<NewProduct />} />
+            <Route path="/admin/categories/" element={<AdminCategories />} />
+            <Route path="/admin/categories/new" element={<NewCategory />} />
+          </Route>
+        </Routes>
+      </FavProvider>
     </AuthProvider>
   );
 }
