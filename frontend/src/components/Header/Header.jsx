@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from "react-router"
 import {Link} from "react-router";
 import styles from './Header.module.css';
-import { BsHeartFill, BsBasket2Fill, BsSearch } from "react-icons/bs";
-
+import { BsHeartFill, BsBasket2Fill, BsSearch} from "react-icons/bs";
+import UserMenu from '../UserMenu';
 
 const Header = () => {
 
@@ -16,7 +16,6 @@ const Header = () => {
         setQuery("");
         }
     };
-
 
     return (
 
@@ -56,14 +55,17 @@ const Header = () => {
                 </span>
 
                 <span className = {styles.heartIcon}>
-                    <Link to = {'/'} >
-                        <BsHeartFill/>
+                    <Link to = {'/favorites'} >
+                        <BsHeartFill size={25} color="tomato" />
                     </Link>
                 </span>    
                 <span className = {styles.cartIcon}>
-                    <Link to = {'/'} >
-                            <BsBasket2Fill/>
+                    <Link to = {'/basket'} >
+                        <BsBasket2Fill size={25}/>
                     </Link>
+                </span>
+                <span className = {styles.login}>
+                    <UserMenu />
                 </span>
                 
             </div>
@@ -75,6 +77,3 @@ const Header = () => {
 }
 
 export default Header;
-
-
-

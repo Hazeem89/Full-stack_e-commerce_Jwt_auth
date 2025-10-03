@@ -22,7 +22,8 @@ db.exec(`
     sku TEXT,
     price REAL NOT NULL,
     imageUrl TEXT,
-    totalSales INTEGER DEFAULT 0
+    totalSales INTEGER DEFAULT 0,
+    publicationDate TEXT
   );
 
   CREATE TABLE IF NOT EXISTS product_categories (
@@ -31,6 +32,31 @@ db.exec(`
     FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
     FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE,
     PRIMARY KEY (product_id, category_id)
+  );
+
+  CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    role TEXT DEFAULT 'user'
+  );
+
+  CREATE TABLE IF NOT EXISTS favorites (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    product_id INTEGER NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+    UNIQUE(user_id, product_id)
+  );
+
+  CREATE TABLE IF NOT EXISTS cart (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    product_id INTEGER NOT NULL,
+    quantity INTEGER NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
   );
 `);
 

@@ -70,23 +70,15 @@ input:hover{
     color: #15b8f8;
 }
 
-.heartIcon a {
-    padding:0 5px;
-    font-size: 24px;
-    cursor: pointer;
-    color: tomato;  
-}
 
-.heartIcon:hover, .cartIcon:hover {
+.heartIcon:hover, .cartIcon:hover, .login:hover{
     transform: scale(1.10);
     border-bottom: 2px solid #15b8f8;
 }
 
-.cartIcon a{
+.heartIcon a, .cartIcon a, .login a {
     padding:0 5px;
-    font-size: 24px;
     cursor: pointer;
-    color: navy;
 }
 
 

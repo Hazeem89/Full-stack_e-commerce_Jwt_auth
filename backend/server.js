@@ -24,6 +24,12 @@ app.use(session({
   cookie: { secure: false } // Set to true if using HTTPS
 }));
 
+// Using Session in pages
+app.use((req, res, next) => {
+  res.locals.session = req.session;
+  next();
+});
+  
 
 // Serve static files (uploaded images)
 app.use('/public', express.static(path.join(__dirname, 'public')));
@@ -33,11 +39,13 @@ app.use('/public', express.static(path.join(__dirname, 'public')));
 const productsRoutes = require('./routes/products');
 const categoriesRoutes = require('./routes/categories');
 const adminRoutes = require('./routes/admin');
+const usersRoutes = require('./routes/users');
 
 // Use routes
 app.use('/products', productsRoutes);
 app.use('/categories', categoriesRoutes);
 app.use('/admin', adminRoutes);
+app.use('/users', usersRoutes);
 
 // Basic route
 app.get('/', (req, res) => {
