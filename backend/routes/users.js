@@ -43,7 +43,13 @@ router.post('/login', (req, res) => {
         const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
         if (!user || user.password !== password) {
             return res.status(401).json({ error: 'Invalid username or password' });
-        }   
+        }
+
+        // Check if role is "user"
+        if (user.role !== 'user') {
+            return res.status(403).json({ error: 'Access denied: role not permitted' });
+        }
+
         // Return user info excluding password
         const { id, role } = user;
         res.json({ id, username, role });
@@ -51,6 +57,7 @@ router.post('/login', (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
 
 // GET user's favorites
 router.get('/favorites/:userId', (req, res) => {
