@@ -37,7 +37,7 @@
     position: absolute;
     bottom: 65px;
     right: 50px;
-    font-size: 24px;
+    font-size: 1.5rem;
     color: tomato;
     cursor: pointer;
 }
@@ -77,7 +77,7 @@
     position: absolute;
     bottom: 0px;
     left: 25px;
-    font-size: 15px;
+    font-size: 0.9375rem;
     color: rgb(61, 60, 60);
     font-family: "Balsamiq Sans", sans-serif;
     font-weight: 300;
