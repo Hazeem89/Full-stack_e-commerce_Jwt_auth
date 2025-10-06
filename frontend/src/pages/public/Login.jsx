@@ -76,7 +76,7 @@ function Login() {
           success: "✅ Inloggning lyckades!",
         });
         setTimeout(() => {
-          navigate("/");
+          navigate("/basket");
         }, 2000);
       })
       .catch((error) => {

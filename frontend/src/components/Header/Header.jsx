@@ -4,11 +4,14 @@ import {Link} from "react-router";
 import styles from './Header.module.css';
 import { BsHeartFill, BsBasket2Fill, BsSearch} from "react-icons/bs";
 import UserMenu from '../UserMenu';
+import { useCart } from '../../contexts/CartContext';
 
 const Header = () => {
 
     const [query, setQuery] = useState("");
     const navigate = useNavigate();
+    const { cartItems } = useCart();
+    const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
     const handleSearch = (e) => {
         if (e.key === "Enter" && query.trim() !== "") {
@@ -61,7 +64,7 @@ const Header = () => {
                 </span>    
                 <span className = {styles.cartIcon}>
                     <Link to = {'/basket'} className="cartIconTarget">
-                        <BsBasket2Fill size={25}/>
+                        <BsBasket2Fill size={25}/> { totalItems > 0 && <span>{totalItems}</span> }
                     </Link>
                 </span>
                 <span className = {styles.login}>

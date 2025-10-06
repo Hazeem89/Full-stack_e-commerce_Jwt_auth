@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { FaUser } from 'react-icons/fa';
-import { BsHeartFill, BsBoxArrowRight } from "react-icons/bs";
+import { BsBoxArrowRight, BsBagHeart, BsArchive } from "react-icons/bs";
 
 const UserMenu = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -24,7 +24,7 @@ const UserMenu = () => {
   }
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div style={{ position: 'relative', zIndex: 100 }}>
       <button
         onClick={() => setShowDropdown(!showDropdown)}
         style={{
@@ -71,10 +71,26 @@ const UserMenu = () => {
               color: '#333',
               borderBottom: '1px solid #eee'
             }}
-            onMouseEnter={(e) => e.target.style.backgroundColor = '#f5f5f5'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+            onMouseEnter={(e) => e.target.style.borderBottom = '2px solid #15b8f8'}  
+            onMouseLeave={(e) => e.target.style.borderBottom = 'transparent'}
           >
-            <BsHeartFill size={25} color="tomato" /> Mina Favoriter
+           <BsBagHeart/>  &nbsp;Mina Favoriter
+          </Link>
+          <Link
+            to="/basket"
+            onClick={() => setShowDropdown(false)}
+            style={{
+              display: 'block',
+              padding: '12px',
+              textDecoration: 'none',
+              color: '#333',
+              borderBottom: '1px solid #eee',
+              zIndex: 100
+            }}
+            onMouseEnter={(e) => e.target.style.borderBottom = '2px solid #15b8f8'}  
+            onMouseLeave={(e) => e.target.style.borderBottom = 'transparent'}
+          >
+            <BsArchive/> &nbsp;Mina Köp
           </Link>
 
           <button
@@ -89,8 +105,8 @@ const UserMenu = () => {
               textAlign: 'left',
               fontWeight: '500'
             }}
-            onMouseEnter={(e) => e.target.style.backgroundColor = '#f5f5f5'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+            onMouseEnter={(e) => e.target.style.borderBottom = '2px solid #15b8f8'}  
+            onMouseLeave={(e) => e.target.style.borderBottom = 'transparent'}
           >
            <BsBoxArrowRight /> Logga ut
           </button>

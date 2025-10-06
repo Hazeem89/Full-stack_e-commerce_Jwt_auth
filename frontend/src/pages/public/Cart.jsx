@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { BsTrash } from 'react-icons/bs';
 import { useCart } from '../../contexts/CartContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 
 const Cart = () => {
     const { cartItems, isLoading, removeFromCart, updateQuantity, error } = useCart();
+    const { isAuthenticated } = useAuth();
     const [updating, setUpdating] = useState({});
 
     const handleQuantityChange = async (productId, newQuantity) => {
@@ -19,6 +20,7 @@ const Cart = () => {
     };
 
     const total = cartItems.reduce((sum, item) => sum + (item.product.Price * item.quantity), 0);
+    
 
     if (isLoading) {
         return (
@@ -94,11 +96,13 @@ const Cart = () => {
                         Fortsätt handla ←
                         </Link>
                     </button>
-                    <button>
-                        <Link to="/login" className="loginLink">
-                        Logga in →
-                        </Link>
-                    </button>
+                    {!isAuthenticated && (
+                        <button>
+                            <Link to="/login" className="loginLink">
+                            Logga in →
+                            </Link>
+                        </button>
+                    )}
                 </div>
             </>
         )}
