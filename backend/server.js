@@ -1,12 +1,20 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const session = require('express-session');
+const cookieParser = require('cookie-parser');
 require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 8000;
-const sessionSecret = process.env.SESSION_SECRET
+
+// 1. Load the JWT secrets from the environment
+const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
+
+// 2. Check if the JWT secrets are set correctly
+if (!JWT_SECRET || !JWT_REFRESH_SECRET) {
+  throw new Error('JWT secrets are not set in environment variables!');
+}
 
 // Middleware
 app.use(express.json());
@@ -15,20 +23,7 @@ app.use(cors({
   origin: 'http://localhost:3000',
   credentials: true
 }));
-
-// Session middleware
-app.use(session({
-  secret: sessionSecret || 'HakonaMatata', // Use env var in production
-  resave: false,
-  saveUninitialized: false,
-  cookie: { secure: false } // Set to true if using HTTPS
-}));
-
-// Using Session in pages
-app.use((req, res, next) => {
-  res.locals.session = req.session;
-  next();
-});
+app.use(cookieParser());
   
 
 // Serve static files (uploaded images)
