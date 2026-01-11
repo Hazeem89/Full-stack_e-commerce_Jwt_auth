@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
+import api from '../services/api';
 
 const FavContext = createContext();
 
@@ -19,11 +20,9 @@ export const FavProvider = ({ children }) => {
         setIsLoading(true);
         try {
             if (isAuthenticated && user?.id) {
-                const response = await fetch(`http://localhost:8000/users/favorites/${user.id}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    setFavorites(data.map(p => p.id));
-                }
+                const response = await api.get(`/users/favorites/${user.id}`);
+                const data = response.data;
+                setFavorites(data.map(p => p.id));
             } else {
                 const localFavorites = JSON.parse(localStorage.getItem('favorites') || '[]');
                 setFavorites(localFavorites);
@@ -41,21 +40,14 @@ export const FavProvider = ({ children }) => {
         try {
             if (isAuthenticated && user?.id) {
                 if (isFavorite) {
-                    const response = await fetch(`http://localhost:8000/users/favorites/${user.id}/${productId}`, {
-                        method: 'DELETE'
-                    });
-                    if (response.ok) {
-                        setFavorites(prev => prev.filter(id => id !== productId));
-                    }
+                    await api.delete(`/users/favorites/${user.id}/${productId}`);
+                    setFavorites(prev => prev.filter(id => id !== productId));
                 } else {
-                    const response = await fetch('http://localhost:8000/users/favorites', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ userId: user.id, productId })
+                    await api.post('/users/favorites', {
+                        userId: user.id,
+                        productId
                     });
-                    if (response.ok) {
-                        setFavorites(prev => [...prev, productId]);
-                    }
+                    setFavorites(prev => [...prev, productId]);
                 }
             } else {
                 let localFavorites = JSON.parse(localStorage.getItem('favorites') || '[]');
@@ -76,15 +68,13 @@ export const FavProvider = ({ children }) => {
     const getFavoritesProducts = async () => {
         try {
             if (isAuthenticated && user?.id) {
-                const response = await fetch(`http://localhost:8000/users/favorites/${user.id}`);
-                if (response.ok) {
-                    return await response.json();
-                }
+                const response = await api.get(`/users/favorites/${user.id}`);
+                return response.data;
             } else {
                 const localFavorites = JSON.parse(localStorage.getItem('favorites') || '[]');
                 if (localFavorites.length > 0) {
                     const productPromises = localFavorites.map(id =>
-                        fetch(`http://localhost:8000/products/${id}`).then(res => res.json())
+                        api.get(`/products/${id}`).then(res => res.data)
                     );
                     const products = await Promise.all(productPromises);
                     return products.filter(p => p && !p.error);

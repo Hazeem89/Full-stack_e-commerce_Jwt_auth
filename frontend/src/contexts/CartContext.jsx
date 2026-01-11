@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
+import api from '../services/api';
 
 const CartContext = createContext();
 
@@ -28,19 +29,15 @@ export const CartProvider = ({ children }) => {
         setError(null);
         try {
             if (isAuthenticated && user?.id) {
-                const response = await fetch(`http://localhost:8000/users/cart/${user.id}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    const transformed = data.map(item => ({
-                        product: item,
-                        quantity: item.quantity || 1,
-                        ImageUrl: item.ImageUrl || '', // Ensure ImageUrl is included
-                    }));
-                    
-                    setCartItems(transformed);
-                } else {
-                    setError('Failed to load cart from server.');
-                }
+                const response = await api.get(`/users/cart/${user.id}`);
+                const data = response.data;
+                const transformed = data.map(item => ({
+                    product: item,
+                    quantity: item.quantity || 1,
+                    ImageUrl: item.ImageUrl || '', // Ensure ImageUrl is included
+                }));
+
+                setCartItems(transformed);
             } else {
                 const localCart = JSON.parse(localStorage.getItem('cart') || '[]');
                 setCartItems(localCart);
@@ -61,17 +58,12 @@ export const CartProvider = ({ children }) => {
                     productId: item.product.id,
                     quantity: item.quantity
                 }));
-                const response = await fetch('http://localhost:8000/users/cart/sync', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: user.id, cartItems: cartItemsForSync })
+                await api.post('/users/cart/sync', {
+                    userId: user.id,
+                    cartItems: cartItemsForSync
                 });
-                if (response.ok) {
-                    localStorage.removeItem('cart');
-                    loadCart(); // Reload to get synced cart
-                } else {
-                    setError('Failed to sync anonymous cart.');
-                }
+                localStorage.removeItem('cart');
+                loadCart(); // Reload to get synced cart
             } catch (err) {
                 console.error('Error syncing cart:', err);
                 setError('Error syncing anonymous cart.');
@@ -93,16 +85,12 @@ export const CartProvider = ({ children }) => {
         const newItem = { product, quantity };
         try {
             if (isAuthenticated && user?.id) {
-                const response = await fetch('http://localhost:8000/users/cart', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },    
-                    body: JSON.stringify({ userId: user.id, productId: product.id, quantity })
+                await api.post('/users/cart', {
+                    userId: user.id,
+                    productId: product.id,
+                    quantity
                 });
-                if (response.ok) {
-                    setCartItems(prev => [...prev, newItem]);
-                } else {
-                    setError('Failed to add product to cart.');
-                }
+                setCartItems(prev => [...prev, newItem]);
             } else {
                 const updatedCart = [...cartItems, newItem];
                 setCartItems(updatedCart);
@@ -118,14 +106,8 @@ export const CartProvider = ({ children }) => {
         setError(null);
         try {
             if (isAuthenticated && user?.id) {
-                const response = await fetch(`http://localhost:8000/users/cart/${user.id}/${productId}`, {
-                    method: 'DELETE'
-                });
-                if (response.ok) {
-                    setCartItems(prev => prev.filter(item => item.product.id !== productId));
-                } else {
-                    setError('Failed to remove product from cart.');
-                }
+                await api.delete(`/users/cart/${user.id}/${productId}`);
+                setCartItems(prev => prev.filter(item => item.product.id !== productId));
             } else {
                 const updatedCart = cartItems.filter(item => item.product.id !== productId);
                 setCartItems(updatedCart);
@@ -149,20 +131,16 @@ export const CartProvider = ({ children }) => {
         setError(null);
         try {
             if (isAuthenticated && user?.id) {
-                const response = await fetch('http://localhost:8000/users/cart', {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: user.id, productId, quantity })  
+                await api.put('/users/cart', {
+                    userId: user.id,
+                    productId,
+                    quantity
                 });
-                if (response.ok) {
-                    setCartItems(prev => prev.map(item =>   
-                        item.product.id === productId ? { ...item, quantity } : item
-                    ));
-                } else {
-                    setError('Failed to update cart quantity.');
-                }
+                setCartItems(prev => prev.map(item =>
+                    item.product.id === productId ? { ...item, quantity } : item
+                ));
             } else {
-                const updatedCart = cartItems.map(item =>   
+                const updatedCart = cartItems.map(item =>
                     item.product.id === productId ? { ...item, quantity } : item
                 );
                 setCartItems(updatedCart);
