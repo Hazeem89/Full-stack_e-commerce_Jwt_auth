@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import api from "../../services/api";
 import styles from "../../components/NewProductForm/NewProductForm.module.css";
 
 function Login() {
@@ -25,14 +26,13 @@ function Login() {
   const syncFavoritesToBackend = async (userId) => {
     try {
       const localFavorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-      
+
       if (localFavorites.length > 0) {
-        await fetch('http://localhost:8000/users/favorites/sync', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, productIds: localFavorites })
+        await api.post('/users/favorites/sync', {
+          userId,
+          productIds: localFavorites
         });
-        
+
         // Clear local favorites after syncing
         localStorage.removeItem('favorites');
       }
@@ -41,51 +41,42 @@ function Login() {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     let newErrors = {};
     if (!formData.username) newErrors.username = "⛔ Användarnamn krävs";
     if (!formData.password) newErrors.password = "⛔ Lösenord krävs";
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
+
     setStatus({ loading: true, error: null, success: null });
-    fetch("http://localhost:8000/users/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(formData),
-    })
-      .then(async (response) => {
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.error || "Något gick fel");
-        }
-        console.log("Success:", data);
-        
-        // Store user in context and localStorage
-        login(data);
-        
-        // Sync anonymous favorites to backend
-        await syncFavoritesToBackend(data.id);
-        
-        setFormData({ username: "", password: "" });
-        setStatus({
-          loading: false,
-          error: null,
-          success: "✅ Inloggning lyckades!",
-        });
-        setTimeout(() => {
-          navigate("/basket");
-        }, 2000);
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-        setStatus({ loading: false, error: error.message, success: null });
-      })
-      .finally(() => {
-        setStatus((prev) => ({ ...prev, loading: false }));
+
+    try {
+      // Login with JWT
+      const response = await api.post("/users/login", formData);
+      const data = response.data; // { accessToken, user: {...} }
+
+      // Store user and accessToken in context (sets Authorization header too)
+      login(data);
+
+      // Sync anonymous favorites to backend
+      await syncFavoritesToBackend(data.user.id);
+
+      setFormData({ username: "", password: "" });
+      setStatus({
+        loading: false,
+        error: null,
+        success: "✅ Inloggning lyckades!",
       });
+
+      setTimeout(() => {
+        navigate("/basket");
+      }, 2000);
+    } catch (error) {
+      console.error("Login error:", error);
+      const errorMessage = error.response?.data?.error || error.message || "Något gick fel";
+      setStatus({ loading: false, error: errorMessage, success: null });
+    }
   };
 
   return (
