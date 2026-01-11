@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import api from "../../services/api";
 import styles from "../../components/NewProductForm/NewProductForm.module.css";
 
 function Register() {
@@ -25,14 +26,13 @@ function Register() {
   const syncFavoritesToBackend = async (userId) => {
     try {
       const localFavorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-      
+
       if (localFavorites.length > 0) {
-        await fetch('http://localhost:8000/users/favorites/sync', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, productIds: localFavorites })
+        await api.post('/users/favorites/sync', {
+          userId,
+          productIds: localFavorites
         });
-        
+
         localStorage.removeItem('favorites');
       }
     } catch (err) {
@@ -54,39 +54,24 @@ function Register() {
 
     try {
       // Register user
-      const registerResponse = await fetch("http://localhost:8000/users/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      const registerData = await registerResponse.json();
-      
-      if (!registerResponse.ok) {
-        throw new Error(registerData.error || "Något gick fel");
-      }
+      const registerResponse = await api.post("/users/register", formData);
+      const registerData = registerResponse.data;
 
       console.log("Registration success:", registerData);
 
       // Auto-login after registration
-      const loginResponse = await fetch("http://localhost:8000/users/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          username: formData.email, 
-          password: formData.password 
-        }),
+      const loginResponse = await api.post("/users/login", {
+        username: formData.email,
+        password: formData.password
       });
 
-      const loginData = await loginResponse.json();
+      const loginData = loginResponse.data; // { accessToken, user: {...} }
 
-      if (loginResponse.ok) {
-        // Store user in context and localStorage
-        login(loginData);
-        
-        // Sync anonymous favorites to backend
-        await syncFavoritesToBackend(loginData.id);
-      }
+      // Store user and accessToken in context (sets Authorization header too)
+      login(loginData);
+
+      // Sync anonymous favorites to backend
+      await syncFavoritesToBackend(loginData.user.id);
 
       setFormData({ email: "", password: "" });
       setStatus({
@@ -100,10 +85,9 @@ function Register() {
       }, 2000);
 
     } catch (error) {
-      console.error("Error:", error);
-      setStatus({ loading: false, error: error.message, success: null });
-    } finally {
-      setStatus((prev) => ({ ...prev, loading: false }));
+      console.error("Registration error:", error);
+      const errorMessage = error.response?.data?.error || error.message || "Något gick fel";
+      setStatus({ loading: false, error: errorMessage, success: null });
     }
   };
 
