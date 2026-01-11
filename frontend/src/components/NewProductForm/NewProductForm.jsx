@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import {Link, useNavigate} from "react-router";
+import api from '../../services/api';
 import styles from './NewProductForm.module.css'
 
 function NewProductForm() {
@@ -20,10 +21,15 @@ function NewProductForm() {
     const [selectedCategories, setSelectedCategories] = useState([]);
 
     useEffect(() => {
-        fetch('http://localhost:8000/categories')
-        .then(response => response.json())
-        .then(data => setCategories(data))
-        .catch(error => console.error('Error fetching categories:', error));
+        const loadCategories = async () => {
+            try {
+                const response = await api.get('/categories');
+                setCategories(response.data);
+            } catch (error) {
+                console.error('Error fetching categories:', error);
+            }
+        };
+        loadCategories();
     }, []);
 
     const [status, setStatus] = useState({
@@ -111,19 +117,13 @@ function NewProductForm() {
         const formData = new FormData();
         formData.append('image', file);
 
-        const response = await fetch('http://localhost:8000/admin/upload-image', {
-            method: 'POST',
-            body: formData,
-            credentials: 'include',
+        const response = await api.post('/admin/upload-image', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
         });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to upload image');
-        }
-
-        const result = await response.json();
-        return result.ImageUrl;
+        return response.data.ImageUrl;
     };
 
     const handleSubmit = async (e) => {
@@ -154,21 +154,9 @@ function NewProductForm() {
           };
 
            console.log('Submission data:', submissionData);
-          
-          const response = await fetch("http://localhost:8000/admin/products", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(submissionData),
-              credentials: 'include',
-          });
-              
-          if (!response.ok) {
-              const errorData = await response.json();
-              throw new Error(errorData.error || "Failed to submit form");
-          }
-            
-            const result = await response.json();
-            console.log("Server Response:", result);
+
+          const response = await api.post("/admin/products", submissionData);
+          console.log("Server Response:", response.data);
             
             setStatus({ loading: false, success: true, error: null });
 
@@ -194,7 +182,8 @@ function NewProductForm() {
             
         } catch (error) {
             console.error("Error submitting form:", error);
-            setStatus({ loading: false, success: false, error: error.message });
+            const errorMessage = error.response?.data?.error || error.message || "Failed to submit form";
+            setStatus({ loading: false, success: false, error: errorMessage });
         }
     };
     

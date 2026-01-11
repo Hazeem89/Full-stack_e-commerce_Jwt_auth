@@ -1,33 +1,32 @@
 import { useEffect, useState } from 'react'
 import {Link} from "react-router";
+import api from '../../services/api';
 import styles from './ProductsTable.module.css';
 
 
 const ProductsTable = () => {
   const [products, setProducts] = useState([]);
-    
-      useEffect(() => {
-    
-        fetch('http://localhost:8000/products')  
-        .then(resp => resp.json())
-        .then(products => {
-        setProducts (products)    
-      });
-      }, [products]);
 
-    const deleteProduct = (id) => {
-      fetch(`http://localhost:8000/admin/products/${id}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      })
-      .then(resp => {
-        if (resp.ok) {
-          setProducts(products.filter(product => product.id !== id));
-        } else {
-          console.error('Failed to delete product');
+    useEffect(() => {
+      const loadProducts = async () => {
+        try {
+          const response = await api.get('/products');
+          setProducts(response.data);
+        } catch (error) {
+          console.error('Error loading products:', error);
         }
-      })
-      .catch(error => console.error('Error deleting product:', error));
+      };
+      loadProducts();
+    }, []);
+
+    const deleteProduct = async (id) => {
+      try {
+        await api.delete(`/admin/products/${id}`);
+        setProducts(products.filter(product => product.id !== id));
+      } catch (error) {
+        console.error('Error deleting product:', error);
+        alert('Failed to delete product');
+      }
     }
 
     return (

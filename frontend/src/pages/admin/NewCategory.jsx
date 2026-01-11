@@ -1,5 +1,6 @@
-import { useState } from 'react'; 
+import { useState } from 'react';
 import { useNavigate } from "react-router";
+import api from '../../services/api';
 import styles from '../../components/NewProductForm/NewProductForm.module.css';
 
 function NewCategory() {
@@ -16,7 +17,7 @@ function NewCategory() {
 
     const navigate = useNavigate();
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         let newErrors = {};
@@ -26,37 +27,22 @@ function NewCategory() {
 
         setStatus({ loading: true, error: null });
 
-        fetch('http://localhost:8000/admin/categories', {
-            method: 'POST', 
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formData),
-            credentials: 'include',
-        })
-            .then(async (response) => {
-                const data = await response.json();
-                if (!response.ok) {
-                    throw new Error(data.error || 'Something went wrong');
-                }
-
-                console.log('Success:', data);
-                setFormData({ Name: "" });
-                setStatus({ loading: false, error: null, success: "✅ Category added successfully!" });
-                setTimeout(() => {
-                    navigate("/admin/products/new");
-                }, 1500);
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-                setStatus({ loading: false, error: error.message });
-                setTimeout(() => {
-                    navigate("/admin/products/new");
-                }, 1500);
-            })
-            .finally(() => {
-                setStatus((prev) => ({ ...prev, loading: false }));
-            });
+        try {
+            const response = await api.post('/admin/categories', formData);
+            console.log('Success:', response.data);
+            setFormData({ Name: "" });
+            setStatus({ loading: false, error: null, success: "✅ Category added successfully!" });
+            setTimeout(() => {
+                navigate("/admin/products/new");
+            }, 1500);
+        } catch (error) {
+            console.error('Error:', error);
+            const errorMessage = error.response?.data?.error || error.message || 'Something went wrong';
+            setStatus({ loading: false, error: errorMessage });
+            setTimeout(() => {
+                navigate("/admin/products/new");
+            }, 1500);
+        }
     };
 
     return (
