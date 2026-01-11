@@ -8,6 +8,20 @@ body {
     margin-left: 0.5rem;
   }
 
+  main {
+      min-height: 80vh;
+      padding: 0px 100px;
+      background-color: #a0a0a0;
+    }
+
+  @media (max-width: 640px) {
+
+    main {
+      min-height: 80vh;
+      padding: 1rem 0;
+    }
+}
+
   .AdminHeader{
     color: white;
     border:1px solid black;

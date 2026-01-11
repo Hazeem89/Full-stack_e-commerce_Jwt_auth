@@ -17,11 +17,13 @@ import Favorites from './pages/public/Favorites.jsx';
 import Cart from './pages/public/Cart.jsx';
 import Login from './pages/public/Login.jsx';
 import Register from './pages/public/Register.jsx';
+import Profile from './pages/public/Profile.jsx';
 
 import AdminProducts from './pages/admin/AdminProducts';
 import NewProduct from './pages/admin/NewProduct';
 import AdminCategories from './pages/admin/AdminCategories';
 import NewCategory from './pages/admin/NewCategory.jsx';
+import AdminRegister from './pages/admin/AdminRegister.jsx';
 
 function App() {
   return (
@@ -40,6 +42,7 @@ function App() {
             <Route path="/basket" element={<Cart />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/profile" element={<Profile />} />
           </Route>
           {/* Admin layout routes */}
           <Route path="/admin/" element={<AdminLayout />}>
@@ -47,6 +50,7 @@ function App() {
             <Route path="/admin/products/new" element={<NewProduct />} />
             <Route path="/admin/categories/" element={<AdminCategories />} />
             <Route path="/admin/categories/new" element={<NewCategory />} />
+            <Route path="/admin/register" element={<AdminRegister />} />
           </Route>
         </Routes>
         </CartProvider>

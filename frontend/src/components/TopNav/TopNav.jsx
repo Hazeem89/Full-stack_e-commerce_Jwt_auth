@@ -12,7 +12,7 @@ const TopNav = () => {
                 .then(response => response.json())
                 .then(data => setCategories(data))
                 .catch(error => console.error('Error fetching categories:', error));
-            }, [categories]);
+            }, [categories.length]);
 
     return (
       <>

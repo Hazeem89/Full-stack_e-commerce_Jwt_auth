@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { FaUser } from 'react-icons/fa';
-import { BsBoxArrowRight, BsBagHeart, BsArchive } from "react-icons/bs";
+import { BsBoxArrowRight, BsBagHeart, BsArchive, BsFileEarmarkPerson } from "react-icons/bs";
 
 const UserMenu = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -61,6 +61,21 @@ const UserMenu = () => {
             <div style={{ fontWeight: '600', marginTop: '4px' }}>{user?.username}</div>
           </div>
           
+          <Link
+            to="/profile"
+            onClick={() => setShowDropdown(false)}
+            style={{
+              display: 'block',
+              padding: '12px',
+              textDecoration: 'none',
+              color: '#333',
+              borderBottom: '1px solid #eee'
+            }}
+            onMouseEnter={(e) => e.target.style.borderBottom = '2px solid #15b8f8'}  
+            onMouseLeave={(e) => e.target.style.borderBottom = 'transparent'}
+          >
+           <BsFileEarmarkPerson/>  &nbsp;Mina uppgifter
+          </Link>
           <Link
             to="/favorites"
             onClick={() => setShowDropdown(false)}
