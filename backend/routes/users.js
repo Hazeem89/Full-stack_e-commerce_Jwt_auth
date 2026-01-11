@@ -1,9 +1,18 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const { verifyToken, requireRole, refreshTokenMiddleware  } = require('../utils/authMiddleware');
 
-// Register new user    
-router.post('/register', (req, res) => {
+const PEPPER = process.env.PEPPER_SECRET;
+const BCRYPT_ROUNDS = parseInt(process.env.BCRYPT_ROUNDS || "10", 10);
+const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "15m";
+
+// Register new user
+router.post('/register', async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -17,15 +26,18 @@ router.post('/register', (req, res) => {
             return res.status(400).json({ error: 'Email already in use' });
         }
 
+        // Hash password with salt + pepper
+        const hashed = await bcrypt.hash(password + PEPPER, BCRYPT_ROUNDS);
+
         // Insert new user using username instead of email
         const stmt = db.prepare('INSERT INTO users (username, password, role) VALUES (?, ?, ?)');
-        const info = stmt.run(email, password, 'user');
+        const info = stmt.run(email, hashed, 'user');
 
         // Return the created user (excluding password)
         const newUser = db.prepare('SELECT id, username AS email, role FROM users WHERE id = ?')
                           .get(info.lastInsertRowid);
 
-        res.status(201).json(newUser);
+        res.status(201).json({ message: 'User registered successfully', user: newUser });
 
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -34,14 +46,20 @@ router.post('/register', (req, res) => {
 
 
 // User login
-router.post('/login', (req, res) => {
-    const { username, password } = req.body;    
+router.post('/login', async (req, res) => {
+    const { username, password } = req.body;
     if (!username || !password) {
         return res.status(400).json({ error: 'Username and password are required' });
     }
     try {
         const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
-        if (!user || user.password !== password) {
+        if (!user) {
+            return res.status(401).json({ error: 'Invalid username or password' });
+        }
+
+        // Verify password with bcrypt (salt + pepper)
+        const match = await bcrypt.compare(password + PEPPER, user.password);
+        if (!match) {
             return res.status(401).json({ error: 'Invalid username or password' });
         }
 
@@ -50,14 +68,89 @@ router.post('/login', (req, res) => {
             return res.status(403).json({ error: 'Access denied: role not permitted' });
         }
 
-        // Return user info excluding password
-        const { id, role } = user;
-        res.json({ id, username, role });
+        // Generate access token (short-lived)
+        const accessToken = jwt.sign(
+            { id: user.id, username: user.username, role: user.role },
+            JWT_SECRET,
+            { expiresIn: JWT_EXPIRES_IN }
+        );
+
+        // Generate refresh token (long-lived)
+        const refreshToken = jwt.sign(
+            { id: user.id },
+            JWT_REFRESH_SECRET,
+            { expiresIn: "7d" }
+        );
+
+        // Store refresh token in database
+        db.prepare('UPDATE users SET refresh_token = ? WHERE id = ?')
+          .run(refreshToken, user.id);
+
+        // Set refresh token as httpOnly cookie
+        res.cookie("refreshToken", refreshToken, {
+            httpOnly: true,
+            sameSite: "strict",
+            secure: false, // Set to true in production with HTTPS
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+
+        // Return access token and user info
+        res.json({
+            accessToken,
+            user: {
+                id: user.id,
+                username: user.username,
+                role: user.role
+            }
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
+// Refresh access token
+router.post('/refresh', refreshTokenMiddleware, (req, res) => {
+    // New access token is available in res.locals.newAccessToken
+    res.json({ accessToken: res.locals.newAccessToken });
+});
+
+// Logout
+router.post('/logout', async (req, res) => {
+    const refreshToken = req.cookies.refreshToken;
+    if (refreshToken) {
+        // Invalidate refresh token in database
+        db.prepare('UPDATE users SET refresh_token = NULL WHERE refresh_token = ?')
+          .run(refreshToken);
+    }
+    res.clearCookie('refreshToken');
+    res.json({ message: 'Logged out successfully' });
+});
+
+
+// GET user's profile information
+router.get('/me',verifyToken, requireRole('user'), (req, res) => {
+    const  userId = req.user.id;
+
+    try {
+        // Fetch user information by userId
+        const user = db.prepare('SELECT id, username AS email, created_at AS registrationDate, role FROM users WHERE id = ?').get(userId);
+        
+        // If user not found, return an error
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        
+        // Return user information (email and role)
+        res.json({
+            id: user.id,
+            email: user.email,  
+            registrationDate: user.registrationDate,
+            role: user.role
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 
 // GET user's favorites
 router.get('/favorites/:userId', (req, res) => {
