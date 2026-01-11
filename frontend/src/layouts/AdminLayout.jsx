@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Outlet } from 'react-router';
 import { Link } from "react-router";
 import Login from '../components/Login';
+import api from '../services/api';
 
 
 function AdminLayout() {
@@ -14,13 +15,18 @@ function AdminLayout() {
 
   const checkAuth = async () => {
     try {
-      const response = await fetch('http://localhost:8000/admin/check-auth', {
-        credentials: 'include',
-      });
-      const data = await response.json();
-      setIsAuthenticated(data.authenticated);
+      // Check if admin token exists in localStorage
+      const adminToken = localStorage.getItem('adminToken');
+      if (adminToken) {
+        // Set the authorization header
+        api.defaults.headers.Authorization = `Bearer ${adminToken}`;
+        setIsAuthenticated(true);
+      } else {
+        setIsAuthenticated(false);
+      }
     } catch (error) {
       console.error('Error checking auth:', error);
+      setIsAuthenticated(false);
     } finally {
       setLoading(false);
     }
@@ -32,13 +38,16 @@ function AdminLayout() {
 
   const handleLogout = async () => {
     try {
-      await fetch('http://localhost:8000/admin/logout', {
-        method: 'POST',
-        credentials: 'include',
-      });
+      await api.post('/admin/logout');
+      localStorage.removeItem('adminToken');
+      delete api.defaults.headers.Authorization;
       setIsAuthenticated(false);
     } catch (error) {
       console.error('Error logging out:', error);
+      // Clear local state even if API call fails
+      localStorage.removeItem('adminToken');
+      delete api.defaults.headers.Authorization;
+      setIsAuthenticated(false);
     }
   };
 
@@ -61,6 +70,8 @@ function AdminLayout() {
         <div className="AdminSide">
           <Link to="/admin/products">Produkter</Link>
           <Link to="/admin/categories">Kategorier</Link>
+          <hr style={{ margin: '10px 0', borderColor: '#ddd' }} />
+          <Link to="/admin/register">Skapa Admin</Link>
         </div>
         <main style={{ padding: '1rem', flex: 1 }}>
           <Outlet />
