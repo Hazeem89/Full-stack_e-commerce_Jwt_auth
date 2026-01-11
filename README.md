@@ -62,6 +62,10 @@
 ![Register](screenshots/register.png)
 *New user registration form*
 
+### Authentication Architecture
+![Authentication Architecture](screenshots/Authentication%20Architecture.png)
+*Complete JWT authentication architecture with access tokens, refresh tokens, and automatic token refresh flow*
+
 ### Admin Dashboard - Products
 ![Admin Products](screenshots/admin-products.png)
 *Admin interface for managing products*
@@ -76,17 +80,19 @@
 
 ## Project Overview
 
-Freaky-Fashion is a full-stack e-commerce web application built with a modern tech stack. The application allows users to browse fashion products, manage their shopping cart, add items to favorites, and perform user authentication. It also includes an admin panel for managing products and categories, enabling administrators to add, edit, and delete products and categories.
+Freaky-Fashion is a full-stack e-commerce web application built with a modern tech stack. The application allows users to browse fashion products, manage their shopping cart, add items to favorites, and perform secure user authentication. It also includes an admin panel for managing products and categories, enabling administrators to add, edit, and delete products and categories.
 
 Key features include:
-- User registration and login
+- User registration and login with JWT authentication
 - Product browsing with categories
 - Shopping cart functionality
 - Favorites list
-- Admin dashboard for product and category management (requires admin authentication)
+- Admin dashboard for product and category management (requires JWT authentication)
 - Image upload for products
 - Responsive design using Bootstrap
-- Session-based authentication for both users and admins
+- Secure JWT-based authentication with refresh tokens and HttpOnly cookies
+- Password hashing with bcrypt and salt/pepper security
+- Automatic token refresh for seamless user experience
 
 ## Technologies Used
 
@@ -95,13 +101,16 @@ Key features include:
 - **Express.js**: Web framework for building RESTful APIs
 - **SQLite**: Lightweight database using better-sqlite3
 - **CORS**: Cross-Origin Resource Sharing for API access
-- **express-session**: Session management for user authentication
+- **JWT (jsonwebtoken)**: JSON Web Tokens for stateless authentication
+- **bcrypt**: Password hashing with salt and pepper security
+- **cookie-parser**: HttpOnly cookie management for refresh tokens
 - **multer**: Middleware for handling file uploads (product images)
 - **dotenv**: Environment variable management
 
 ### Frontend
 - **React**: JavaScript library for building user interfaces
 - **Vite**: Fast build tool and development server
+- **Axios**: Promise-based HTTP client with interceptors for API requests and automatic token refresh
 - **Bootstrap**: CSS framework for responsive design
 - **React Router DOM**: Routing library for single-page applications
 - **React Icons**: Icon library for UI elements
@@ -127,17 +136,33 @@ npm --version
 Create a `.env` file in the `backend` directory with the following variables:
 
 ```env
-SESSION_SECRET=your-secret-key-here
+# Server Configuration
 SERVER_URL=http://localhost:8000
 PORT=8000
+
+# Security Secrets (CHANGE IN PRODUCTION!)
+PEPPER_SECRET=your-pepper-secret-here-change-this-in-production
+JWT_SECRET=your-jwt-secret-here-change-this-in-production
+JWT_REFRESH_SECRET=your-jwt-refresh-secret-here-change-this-in-production
+
+# JWT Configuration
+JWT_EXPIRES_IN=15m
+BCRYPT_ROUNDS=10
 ```
 
 **Environment Variables Explained:**
-- `SESSION_SECRET`: Secret key for session management (use a strong, random string in production)
 - `SERVER_URL`: Backend server URL (used for image upload paths)
 - `PORT`: Port number for the backend server (default: 8000)
+- `PEPPER_SECRET`: Additional secret for password hashing (minimum 32 characters recommended)
+- `JWT_SECRET`: Secret key for signing access tokens (minimum 32 characters recommended)
+- `JWT_REFRESH_SECRET`: Secret key for signing refresh tokens (minimum 32 characters recommended)
+- `JWT_EXPIRES_IN`: Access token expiration time (default: 15 minutes)
+- `BCRYPT_ROUNDS`: Number of bcrypt hashing rounds (default: 10, higher = more secure but slower)
 
-**Security Note:** Never commit your `.env` file to version control. It should be listed in `.gitignore`.
+**Security Note:**
+- Never commit your `.env` file to version control. It should be listed in `.gitignore`
+- Use strong, random strings for all secrets in production (minimum 32 characters)
+- Keep JWT_SECRET and JWT_REFRESH_SECRET different from each other
 
 ## Getting Started
 
@@ -221,47 +246,34 @@ The database file is created at: `backend/db/fashion.db`
 
 ### Creating an Admin User
 
-The application does NOT create a default admin user. You must manually create one by inserting a record into the database.
+The application uses a secure admin setup process through the web interface.
 
-**Option 1: Using SQLite CLI**
+**First-Time Admin Setup:**
 
-1. Install SQLite (if not already installed):
-   - Windows: Download from https://www.sqlite.org/download.html
-   - Mac: `brew install sqlite`
-   - Linux: `sudo apt-get install sqlite3`
+1. Start the backend and frontend servers
+2. Navigate to `http://localhost:3000/admin`
+3. The first time you visit the admin panel, you'll see a "Setup Admin" form
+4. Create your admin account with:
+   - Username (email format recommended)
+   - Password (will be securely hashed with bcrypt)
+5. Click "Setup Admin Account"
+6. You'll be automatically logged in
 
-2. Open the database:
-   ```bash
-   cd backend/db
-   sqlite3 fashion.db
-   ```
+**Creating Additional Admin Users:**
 
-3. Insert an admin user:
-   ```sql
-   INSERT INTO users (username, password, role)
-   VALUES ('admin', 'admin123', 'admin');
-   ```
+Once logged in as an admin, you can create additional admin accounts:
 
-4. Exit SQLite:
-   ```sql
-   .exit
-   ```
+1. Navigate to Admin panel
+2. Go to "Register Admin" page
+3. Create new admin credentials
+4. The new admin can now log in with their credentials
 
-**Option 2: Using a Database Browser**
-
-1. Download [DB Browser for SQLite](https://sqlitebrowser.org/)
-2. Open `backend/db/fashion.db`
-3. Go to "Browse Data" tab → "users" table
-4. Click "New Record" and add:
-   - username: `admin`
-   - password: `admin123`
-   - role: `admin`
-5. Click "Write Changes"
-
-**Security Warning:**
-- Passwords are currently stored in **plain text** (not hashed) - this is a security vulnerability
-- Change the default admin password immediately after first login
-- In production, implement proper password hashing (bcrypt recommended)
+**Security Features:**
+- All passwords are securely hashed using bcrypt with salt and pepper
+- Passwords are NEVER stored in plain text
+- JWT-based authentication with access and refresh tokens
+- HttpOnly cookies for enhanced security
+- Automatic token refresh for seamless sessions
 
 ### Database Schema
 
@@ -269,8 +281,10 @@ The application does NOT create a default admin user. You must manually create o
 ```sql
 id INTEGER PRIMARY KEY AUTOINCREMENT
 username TEXT UNIQUE NOT NULL
-password TEXT NOT NULL
+password TEXT NOT NULL              -- bcrypt hashed with salt + pepper
 role TEXT DEFAULT 'user'
+refresh_token TEXT                  -- JWT refresh token for session management
+created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 ```
 
 **products table:**
@@ -318,11 +332,12 @@ Freaky-Fashion/
 │   │   └── images/
 │   │       └── products/             # Uploaded product images
 │   ├── routes/                       # API route handlers
-│   │   ├── admin.js                  # Admin-related routes
+│   │   ├── admin.js                  # Admin-related routes (JWT protected)
 │   │   ├── categories.js             # Category management routes
 │   │   ├── products.js               # Product management routes
-│   │   └── users.js                  # User authentication routes
+│   │   └── users.js                  # User authentication routes (JWT)
 │   ├── utils/                        # Utility functions
+│   │   └── authMiddleware.js         # JWT authentication middleware
 │   ├── db.js                         # Database initialization
 │   ├── package.json                  # Backend dependencies and scripts
 │   ├── package-lock.json             # Backend lockfile
@@ -359,6 +374,7 @@ Freaky-Fashion/
 │   │   │   ├── admin/                # Admin pages
 │   │   │   │   ├── AdminCategories.jsx
 │   │   │   │   ├── AdminProducts.jsx
+│   │   │   │   ├── AdminRegister.jsx # Admin registration page
 │   │   │   │   ├── NewCategory.jsx
 │   │   │   │   └── NewProduct.jsx
 │   │   │   └── public/               # Public pages
@@ -369,8 +385,11 @@ Freaky-Fashion/
 │   │   │       ├── Login.jsx
 │   │   │       ├── Nyheter.jsx
 │   │   │       ├── Product.jsx
+│   │   │       ├── Profile.jsx       # User profile page
 │   │   │       ├── Register.jsx
 │   │   │       └── SearchResults.jsx
+│   │   ├── services/                 # API services
+│   │   │   └── api.js                # Axios client with auto-refresh
 │   │   ├── utils/                    # Utility functions
 │   │   ├── App.css                   # Main app styles
 │   │   ├── App.jsx                   # Main app component
@@ -384,25 +403,33 @@ Freaky-Fashion/
 │   ├── README.md                     # Frontend README (Vite template)
 │   └── vite.config.js                # Vite configuration
 ├── .gitignore                        # Root git ignore
+├── IMPLEMENTATION_SUMMARY.md         # Comprehensive JWT implementation documentation
+├── TESTING_REFRESH_TOKEN_FIX.md      # Refresh token testing guide
 └── README.md                         # This file
 ```
 
 ## Admin Access
 
-The admin panel allows you to manage products and categories through a web interface.
+The admin panel allows you to manage products and categories through a web interface with secure JWT authentication.
 
 ### Accessing the Admin Panel
 
-1. **Create an admin user** (see Database Setup section above)
+1. **First-Time Setup:**
+   - Navigate to: `http://localhost:3000/admin`
+   - If no admin exists, you'll see the "Setup Admin" form
+   - Create your admin account (username and password)
+   - You'll be automatically logged in after setup
 
-2. **Navigate to the admin login page:**
-   - Open your browser and go to: `http://localhost:3000/admin`
-   - Or click on the user icon in the header and select "Admin Login"
+2. **Subsequent Logins:**
+   - Navigate to: `http://localhost:3000/admin`
+   - Enter your admin credentials
+   - JWT tokens will be issued for secure access
 
-3. **Login with admin credentials:**
-   - Default username: `admin`
-   - Default password: `admin123`
-   - (Use the credentials you created in the database)
+3. **Session Management:**
+   - Access tokens expire after 15 minutes
+   - Refresh tokens are valid for 7 days
+   - Automatic token refresh keeps you logged in seamlessly
+   - Logout invalidates all tokens for security
 
 ### Admin Features
 
@@ -431,16 +458,18 @@ Once logged in, you can:
 
 The following admin endpoints are available:
 
-- `POST /admin/login` - Admin authentication
-- `GET /admin/check-auth` - Verify admin session
-- `POST /admin/logout` - Logout admin
-- `POST /admin/products` - Create new product (requires auth)
-- `DELETE /admin/products/:id` - Delete product (requires auth)
-- `POST /admin/categories` - Create new category (requires auth)
-- `DELETE /admin/categories/:id` - Delete category (requires auth)
-- `POST /admin/upload-image` - Upload product image (requires auth)
+- `POST /admin/setup` - Initial admin account creation (only when no admin exists)
+- `POST /admin/login` - Admin authentication (returns JWT tokens)
+- `POST /admin/register` - Create additional admin accounts (requires JWT auth)
+- `POST /admin/refresh` - Refresh access token using refresh token cookie
+- `POST /admin/logout` - Logout and invalidate refresh token
+- `POST /admin/products` - Create new product (requires JWT auth)
+- `DELETE /admin/products/:id` - Delete product (requires JWT auth)
+- `POST /admin/categories` - Create new category (requires JWT auth)
+- `DELETE /admin/categories/:id` - Delete category (requires JWT auth)
+- `POST /admin/upload-image` - Upload product image (requires JWT auth)
 
-All admin routes (except login) require authentication via session management.
+All admin routes (except setup, login, and refresh) require JWT authentication via Authorization header.
 
 ## API Documentation
 
@@ -469,22 +498,45 @@ The backend provides a RESTful API for managing products, categories, users, fav
 
 | Method | Endpoint | Description | Auth Required |
 |--------|----------|-------------|---------------|
-| POST | `/admin/login` | Admin login | No |
-| GET | `/admin/check-auth` | Check admin auth status | Yes |
-| POST | `/admin/logout` | Admin logout | Yes |
-| POST | `/admin/upload-image` | Upload product image | Yes |
-| POST | `/admin/products` | Create new product | Yes |
-| DELETE | `/admin/products/:id` | Delete product | Yes |
-| POST | `/admin/categories` | Create new category | Yes |
-| DELETE | `/admin/categories/:id` | Delete category | Yes |
+| POST | `/admin/setup` | Initial admin creation (first time only) | No |
+| POST | `/admin/login` | Admin login (returns JWT tokens) | No |
+| POST | `/admin/register` | Create additional admin (requires admin JWT) | Yes (Admin) |
+| POST | `/admin/refresh` | Refresh access token | No (uses httpOnly cookie) |
+| POST | `/admin/logout` | Logout and invalidate tokens | No |
+| POST | `/admin/upload-image` | Upload product image | Yes (Admin JWT) |
+| POST | `/admin/products` | Create new product | Yes (Admin JWT) |
+| DELETE | `/admin/products/:id` | Delete product | Yes (Admin JWT) |
+| POST | `/admin/categories` | Create new category | Yes (Admin JWT) |
+| DELETE | `/admin/categories/:id` | Delete category | Yes (Admin JWT) |
+
+**Admin Setup Body (First Time Only):**
+```json
+{
+  "username": "admin@example.com",
+  "password": "your-secure-password"
+}
+```
 
 **Admin Login Body:**
 ```json
 {
-  "username": "admin",
-  "password": "admin123"
+  "username": "admin@example.com",
+  "password": "your-password"
 }
 ```
+
+**Admin Login Response:**
+```json
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": 1,
+    "username": "admin@example.com",
+    "role": "admin"
+  }
+}
+```
+Note: Refresh token is automatically set as httpOnly cookie
 
 **Create Product Body:**
 ```json
@@ -510,25 +562,49 @@ The backend provides a RESTful API for managing products, categories, users, fav
 
 | Method | Endpoint | Description | Auth Required |
 |--------|----------|-------------|---------------|
-| POST | `/users/register` | Register new user | No |
-| POST | `/users/login` | User login | No |
-| GET | `/users/favorites/:userId` | Get user favorites | No |
-| POST | `/users/favorites` | Add to favorites | No |
-| DELETE | `/users/favorites/:userId/:productId` | Remove from favorites | No |
-| POST | `/users/favorites/sync` | Sync anonymous favorites | No |
-| GET | `/users/cart/:userId` | Get user cart | No |
-| POST | `/users/cart` | Add to cart | No |
-| PUT | `/users/cart` | Update cart quantity | No |
-| DELETE | `/users/cart/:userId/:productId` | Remove from cart | No |
-| POST | `/users/cart/sync` | Sync anonymous cart | No |
+| POST | `/users/register` | Register new user (returns JWT tokens) | No |
+| POST | `/users/login` | User login (returns JWT tokens) | No |
+| POST | `/users/refresh` | Refresh access token | No (uses httpOnly cookie) |
+| POST | `/users/logout` | Logout and invalidate tokens | No |
+| GET | `/users/me` | Get current user profile | Yes (User JWT) |
+| GET | `/users/favorites/:userId` | Get user favorites | Yes (User JWT) |
+| POST | `/users/favorites` | Add to favorites | Yes (User JWT) |
+| DELETE | `/users/favorites/:userId/:productId` | Remove from favorites | Yes (User JWT) |
+| POST | `/users/favorites/sync` | Sync anonymous favorites | Yes (User JWT) |
+| GET | `/users/cart/:userId` | Get user cart | Yes (User JWT) |
+| POST | `/users/cart` | Add to cart | Yes (User JWT) |
+| PUT | `/users/cart` | Update cart quantity | Yes (User JWT) |
+| DELETE | `/users/cart/:userId/:productId` | Remove from cart | Yes (User JWT) |
+| POST | `/users/cart/sync` | Sync anonymous cart | Yes (User JWT) |
 
-**Register/Login Body:**
+**Register Body:**
 ```json
 {
-  "username": "user123",
-  "password": "password123"
+  "email": "user@example.com",
+  "password": "your-secure-password"
 }
 ```
+
+**Login Body:**
+```json
+{
+  "username": "user@example.com",
+  "password": "your-password"
+}
+```
+
+**Login Response:**
+```json
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": 1,
+    "username": "user@example.com",
+    "role": "user"
+  }
+}
+```
+Note: Refresh token is automatically set as httpOnly cookie
 
 **Add to Favorites Body:**
 ```json
@@ -578,4 +654,22 @@ The backend provides a RESTful API for managing products, categories, users, fav
 
 CORS is enabled for the frontend origin: `http://localhost:3000`
 
-Credentials are supported for session management.
+Credentials are supported for JWT authentication and HttpOnly cookies.
+
+**Configuration:**
+```javascript
+app.use(cors({
+  origin: 'http://localhost:3000',
+  credentials: true  // Required for httpOnly cookies
+}));
+```
+
+### Authentication Flow
+
+**JWT Token Strategy:**
+- **Access Token**: Short-lived (15 minutes), stored in memory (React state)
+- **Refresh Token**: Long-lived (7 days), stored in httpOnly cookie and database
+- **Auto-Refresh**: Axios interceptor automatically refreshes expired tokens
+- **Security**: HttpOnly cookies prevent XSS attacks, bcrypt protects passwords
+
+For detailed implementation documentation, see [IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)
