@@ -4,44 +4,167 @@ const path = require('path');
 const fs = require('fs');
 const router = express.Router();
 const db = require('../db');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const { verifyToken, requireRole, refreshTokenMiddleware  } = require('../utils/authMiddleware');
 
-const requireAuth = (req, res, next) => {
-  if (req.session && req.session.admin) {
-    return next();
-  } else {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-};
+const PEPPER = process.env.PEPPER_SECRET;
+const BCRYPT_ROUNDS = parseInt(process.env.BCRYPT_ROUNDS || "10", 10);
+const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "15m";
 
-// POST - Login
-router.post('/login', (req, res) => {
+// Admin login
+router.post('/login', async (req, res) => {
   const { username, password } = req.body;
-  const user = db.prepare('SELECT * FROM users WHERE username = ? AND password = ? AND role = ?').get(username, password, 'admin');
-  if (user) {
-    req.session.admin = true;
-    res.json({ message: 'Login successful' });
-  } else {
-    res.status(401).json({ error: 'Invalid credentials' });
-  }
-});
 
-// GET - Check authentication
-router.get('/check-auth', (req, res) => {
-  if (req.session && req.session.admin) {
-    res.json({ authenticated: true });
-  } else {
-    res.json({ authenticated: false });
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Username and password are required' });
   }
-});
 
-// POST - Logout
-router.post('/logout', (req, res) => {
-  req.session.destroy((err) => {
-    if (err) {
-      return res.status(500).json({ error: 'Failed to logout' });
+  try {
+    const user = db.prepare('SELECT * FROM users WHERE username = ? AND role = ?').get(username, 'admin');
+
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
-    res.json({ message: 'Logout successful' });
-  });
+
+    // Verify password with bcrypt (salt + pepper)
+    const match = await bcrypt.compare(password + PEPPER, user.password);
+    if (!match) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // Generate access token
+    const accessToken = jwt.sign(
+      { id: user.id, username: user.username, role: user.role },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES_IN }
+    );
+
+    // Generate refresh token
+    const refreshToken = jwt.sign(
+      { id: user.id },
+      JWT_REFRESH_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    // Store refresh token in database
+    db.prepare('UPDATE users SET refresh_token = ? WHERE id = ?')
+      .run(refreshToken, user.id);
+
+    // Set refresh token as httpOnly cookie
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      sameSite: "strict",
+      secure: false, // Set to true in production with HTTPS
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
+    res.json({
+      accessToken,
+      user: {
+        id: user.id,
+        username: user.username,
+        role: user.role
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Refresh access token (same as users route)
+router.post('/refresh', refreshTokenMiddleware, (req, res) => {
+    // New access token is available in res.locals.newAccessToken
+    res.json({ accessToken: res.locals.newAccessToken });
+});
+
+// Logout
+router.post('/logout', async (req, res) => {
+  const refreshToken = req.cookies.refreshToken;
+  if (refreshToken) {
+    db.prepare('UPDATE users SET refresh_token = NULL WHERE refresh_token = ?')
+      .run(refreshToken);
+  }
+  res.clearCookie('refreshToken');
+  res.json({ message: 'Logout successful' });
+});
+
+// Initial admin setup (only works when no admin exists)
+router.post('/setup', async (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Username and password are required' });
+  }
+
+  try {
+    // Check if any admin already exists
+    const existingAdmin = db.prepare('SELECT * FROM users WHERE role = ?').get('admin');
+    if (existingAdmin) {
+      return res.status(403).json({ error: 'Admin setup already completed. Use /admin/register instead.' });
+    }
+
+    // Check if username already exists
+    const existingUser = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
+    if (existingUser) {
+      return res.status(400).json({ error: 'Username already exists' });
+    }
+
+    // Hash password with salt + pepper
+    const hashed = await bcrypt.hash(password + PEPPER, BCRYPT_ROUNDS);
+
+    // Create first admin user
+    const stmt = db.prepare('INSERT INTO users (username, password, role) VALUES (?, ?, ?)');
+    const info = stmt.run(username, hashed, 'admin');
+
+    res.status(201).json({
+      message: 'Initial admin account created successfully',
+      user: {
+        id: info.lastInsertRowid,
+        username,
+        role: 'admin'
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Register new admin (requires existing admin authentication)
+router.post('/register', verifyToken, requireRole('admin'), async (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Username and password are required' });
+  }
+
+  try {
+    // Check if username already exists
+    const existingUser = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
+    if (existingUser) {
+      return res.status(400).json({ error: 'Username already exists' });
+    }
+
+    // Hash password with salt + pepper
+    const hashed = await bcrypt.hash(password + PEPPER, BCRYPT_ROUNDS);
+
+    // Create new admin user
+    const stmt = db.prepare('INSERT INTO users (username, password, role) VALUES (?, ?, ?)');
+    const info = stmt.run(username, hashed, 'admin');
+
+    res.status(201).json({
+      message: 'Admin account created successfully',
+      user: {
+        id: info.lastInsertRowid,
+        username,
+        role: 'admin'
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Configure multer for image uploads
@@ -72,7 +195,7 @@ const upload = multer({
 });
 
 // POST - Upload image
-router.post('/upload-image', requireAuth, upload.single('image'), (req, res) => {
+router.post('/upload-image', verifyToken, requireRole('admin'), upload.single('image'), (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No image file provided' });
@@ -88,7 +211,7 @@ router.post('/upload-image', requireAuth, upload.single('image'), (req, res) => 
 });
 
 // Add new product
-router.post('/products', requireAuth, (req, res) => {
+router.post('/products', verifyToken, requireRole('admin'), (req, res) => {
     console.log('Received data:', req.body); 
     const { Name, Description, ImageUrl, Brand, SKU, Price, PublicationDate, Categories } = req.body;
     console.log('Extracted imageUrl:', ImageUrl);
@@ -127,7 +250,7 @@ router.post('/products', requireAuth, (req, res) => {
 });
 
 // Delete product
-router.delete('/products/:id', requireAuth, (req, res) => {
+router.delete('/products/:id', verifyToken, requireRole('admin'), (req, res) => {
   const { id } = req.params;
   try {
     // First, get the product to retrieve ImageUrl
@@ -157,8 +280,8 @@ router.delete('/products/:id', requireAuth, (req, res) => {
   }
 });
 
-// Add new category 
-router.post('/categories', requireAuth, (req, res) => {
+// Add new category
+router.post('/categories', verifyToken, requireRole('admin'), (req, res) => {
   try {
     const { Name } = req.body;
     if (!Name) {
@@ -192,7 +315,7 @@ router.post('/categories', requireAuth, (req, res) => {
 });
 
 // Delete category
-router.delete('/categories/:id', requireAuth, (req, res) => {
+router.delete('/categories/:id', verifyToken, requireRole('admin'), (req, res) => {
   const { id } = req.params;
   try {
     // Check if category exists
