@@ -1,35 +1,34 @@
 import { useEffect, useState } from 'react'
 import {Link} from "react-router";
+import api from '../../services/api';
 import styles from './CategoriesTable.module.css';
 
 
 const CategoriesTable = () => {
 
     const [categories, setCategories] = useState([]);
-    
-      useEffect(() => {
-    
-        fetch('http://localhost:8000/categories')  
-        .then(resp => resp.json())
-        .then(categories => {
-        setCategories (categories)
-      });
-      }, [categories]);
 
-      const deleteCategory = (id) => {
-      fetch(`http://localhost:8000/admin/categories/${id}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      })
-      .then(resp => {
-        if (resp.ok) {
+      useEffect(() => {
+        const loadCategories = async () => {
+          try {
+            const response = await api.get('/categories');
+            setCategories(response.data);
+          } catch (error) {
+            console.error('Error loading categories:', error);
+          }
+        };
+        loadCategories();
+      }, []);
+
+      const deleteCategory = async (id) => {
+        try {
+          await api.delete(`/admin/categories/${id}`);
           setCategories(categories.filter(category => category.id !== id));
-        } else {
-          console.error('Failed to delete category');
+        } catch (error) {
+          console.error('Error deleting category:', error);
+          alert('Failed to delete category');
         }
-      })
-      .catch(error => console.error('Error deleting category:', error));
-    }
+      }
 
 
     return (
